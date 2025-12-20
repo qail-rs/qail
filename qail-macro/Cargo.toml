@@ -13,7 +13,7 @@ keywords = ["qail", "macro", "sql"]
 proc-macro = true
 
 [dependencies]
-qail-core = { path = "../qail-core" }
+qail-core = { path = "../qail-core", version = "0.3.0" }
 syn = { version = "2.0", features = ["full"] }
 quote = "1.0"
 proc-macro2 = "1.0"
