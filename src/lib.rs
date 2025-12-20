@@ -32,6 +32,7 @@ pub mod ast;
 pub mod engine;
 pub mod error;
 pub mod parser;
+pub mod schema;
 pub mod transpiler;
 
 pub mod prelude {
@@ -39,6 +40,7 @@ pub mod prelude {
     pub use crate::engine::{QailDB, QailQuery, QailValue};
     pub use crate::error::*;
     pub use crate::parser::parse;
+    pub use crate::schema::{generate_struct, get_table_schema};
     pub use crate::transpiler::ToSql;
 }
 

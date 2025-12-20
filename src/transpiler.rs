@@ -17,6 +17,7 @@ impl ToSql for QailCmd {
             Action::Set => self.to_update_sql(),
             Action::Del => self.to_delete_sql(),
             Action::Add => self.to_insert_sql(),
+            Action::Gen => format!("-- gen::{}  (generates Rust struct, not SQL)", self.table),
         }
     }
 }

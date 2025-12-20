@@ -132,6 +132,8 @@ pub enum Action {
     Del,
     /// INSERT query
     Add,
+    /// Generate Rust struct from table schema
+    Gen,
 }
 
 impl std::fmt::Display for Action {
@@ -141,6 +143,7 @@ impl std::fmt::Display for Action {
             Action::Set => write!(f, "SET"),
             Action::Del => write!(f, "DEL"),
             Action::Add => write!(f, "ADD"),
+            Action::Gen => write!(f, "GEN"),
         }
     }
 }

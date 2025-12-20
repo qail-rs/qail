@@ -53,6 +53,10 @@ struct Cli {
     #[arg(short, long)]
     verbose: bool,
 
+    /// Output file path (for gen command)
+    #[arg(short, long)]
+    output: Option<String>,
+
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -141,6 +145,22 @@ async fn execute_query(query: &str, cli: &Cli) -> Result<(), QailError> {
     }
 
     let db = QailDB::connect(db_url).await?;
+    
+    // Handle Gen action separately
+    if cmd.action == Action::Gen {
+        let columns = qail::schema::get_table_schema(db.pool(), &cmd.table).await?;
+        let struct_code = qail::schema::generate_struct(&cmd.table, &columns);
+        
+        if let Some(ref path) = cli.output {
+            std::fs::write(path, &struct_code)
+                .map_err(|e| QailError::Execution(format!("Failed to write file: {}", e)))?;
+            println!("{} Wrote struct to {}", "✓".green(), path.cyan());
+        } else {
+            println!("{}", struct_code);
+        }
+        return Ok(());
+    }
+    
     let mut qry = db.query(query);
 
     // Bind parameters
@@ -169,6 +189,7 @@ async fn execute_query(query: &str, cli: &Cli) -> Result<(), QailError> {
             let affected = qry.execute().await?;
             println!("{} {} rows affected", "✓".green(), affected);
         }
+        Action::Gen => unreachable!(), // Handled above
     }
 
     Ok(())

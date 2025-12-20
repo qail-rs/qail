@@ -64,13 +64,14 @@ fn parse_qail_cmd(input: &str) -> IResult<&str, QailCmd> {
     ))
 }
 
-/// Parse the action (get, set, del, add).
+/// Parse the action (get, set, del, add, gen).
 fn parse_action(input: &str) -> IResult<&str, Action> {
     alt((
         value(Action::Get, tag("get")),
         value(Action::Set, tag("set")),
         value(Action::Del, tag("del")),
         value(Action::Add, tag("add")),
+        value(Action::Gen, tag("gen")),
     ))(input)
 }
 
