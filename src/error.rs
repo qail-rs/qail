@@ -36,6 +36,10 @@ pub enum QailError {
     #[error("Connection error: {0}")]
     Connection(String),
 
+    /// Query execution error.
+    #[error("Execution error: {0}")]
+    Execution(String),
+
     /// Configuration error.
     #[error("Configuration error: {0}")]
     Config(String),

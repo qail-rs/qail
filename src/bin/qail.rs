@@ -15,9 +15,10 @@
 //! qail "get::users•@*[id=$1]" --bind 42
 //! ```
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use colored::*;
 use qail::prelude::*;
+use std::collections::HashMap;
 
 #[derive(Parser)]
 #[command(name = "qail")]
@@ -25,9 +26,9 @@ use qail::prelude::*;
 #[command(version = "0.1.0")]
 #[command(about = "🪝 The Horizontal Query Language CLI", long_about = None)]
 #[command(after_help = "EXAMPLES:
-    qail \"get::users•@*[active=true]\"
-    qail \"get::orders•@id@total[user_id=$1][lim=10]\" --bind 42
-    qail \"set::users•[verified=true][id=$1]\" --bind 7 --dry-run")]
+    qail 'get::users•@*[active=true]'
+    qail 'get::orders•@id@total[user_id=$1][lim=10]' --bind 42
+    qail 'set::users•[verified=true][id=$1]' --bind 7 --dry-run")]
 struct Cli {
     /// The QAIL query to execute
     query: Option<String>,
@@ -40,9 +41,9 @@ struct Cli {
     #[arg(short, long, value_delimiter = ',')]
     bind: Vec<String>,
 
-    /// Output format (table, json, csv)
-    #[arg(short, long, default_value = "table")]
-    format: String,
+    /// Output format
+    #[arg(short, long, value_enum, default_value = "table")]
+    format: OutputFormat,
 
     /// Database connection URL
     #[arg(long, env = "QAIL_DATABASE_URL")]
@@ -54,6 +55,12 @@ struct Cli {
 
     #[command(subcommand)]
     command: Option<Commands>,
+}
+
+#[derive(Clone, ValueEnum)]
+enum OutputFormat {
+    Table,
+    Json,
 }
 
 #[derive(Subcommand)]
@@ -69,7 +76,8 @@ enum Commands {
     Symbols,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
@@ -78,58 +86,158 @@ fn main() {
         Some(Commands::Symbols) => show_symbols(),
         None => {
             if let Some(query) = &cli.query {
-                execute_query(query, &cli);
+                if let Err(e) = execute_query(query, &cli).await {
+                    eprintln!("{} {}", "Error:".red().bold(), e);
+                    std::process::exit(1);
+                }
             } else {
                 println!("{}", "🪝 QAIL — The Horizontal Query Language".cyan().bold());
                 println!();
-                println!("Usage: kq <QUERY> [OPTIONS]");
+                println!("Usage: qail <QUERY> [OPTIONS]");
                 println!();
-                println!("Try: kq --help");
+                println!("Try: qail --help");
             }
         }
     }
 }
 
-fn execute_query(query: &str, cli: &Cli) {
+async fn execute_query(query: &str, cli: &Cli) -> Result<(), QailError> {
     if cli.verbose {
         println!("{} {}", "Input:".dimmed(), query.yellow());
     }
 
-    match qail::parse(query) {
-        Ok(cmd) => {
-            let sql = cmd.to_sql();
+    // Parse the query
+    let cmd = qail::parse(query)?;
+    let sql = cmd.to_sql();
 
-            if cli.dry_run || cli.database_url.is_none() {
-                println!("{}", "Generated SQL:".green().bold());
-                println!("{}", sql.white());
+    // Dry run or no database URL - just show SQL
+    if cli.dry_run || cli.database_url.is_none() {
+        println!("{}", "Generated SQL:".green().bold());
+        println!("{}", sql.white());
 
-                if !cli.bind.is_empty() {
-                    println!();
-                    println!("{}", "Bindings:".cyan());
-                    for (i, b) in cli.bind.iter().enumerate() {
-                        println!("  ${} = {}", i + 1, b.yellow());
-                    }
-                }
-
-                if cli.database_url.is_none() && !cli.dry_run {
-                    println!();
-                    println!(
-                        "{}",
-                        "⚠ No database URL. Use --database-url or set QAIL_DATABASE_URL"
-                            .yellow()
-                    );
-                }
-            } else {
-                // TODO: Execute with sqlx
-                println!("{}", "Execution not yet implemented.".yellow());
-                println!("{}", "Generated SQL:".green().bold());
-                println!("{}", sql.white());
+        if !cli.bind.is_empty() {
+            println!();
+            println!("{}", "Bindings:".cyan());
+            for (i, b) in cli.bind.iter().enumerate() {
+                println!("  ${} = {}", i + 1, b.yellow());
             }
         }
-        Err(e) => {
-            eprintln!("{} {}", "Error:".red().bold(), e);
-            std::process::exit(1);
+
+        if cli.database_url.is_none() && !cli.dry_run {
+            println!();
+            println!(
+                "{}",
+                "⚠ No database URL. Use --database-url or set QAIL_DATABASE_URL"
+                    .yellow()
+            );
         }
+        return Ok(());
+    }
+
+    // Connect and execute
+    let db_url = cli.database_url.as_ref().unwrap();
+    if cli.verbose {
+        println!("{} {}", "Connecting to:".dimmed(), db_url);
+    }
+
+    let db = QailDB::connect(db_url).await?;
+    let mut qry = db.query(query);
+
+    // Bind parameters
+    for binding in &cli.bind {
+        // Try to parse as number, otherwise use as string
+        if let Ok(n) = binding.parse::<i64>() {
+            qry = qry.bind(n);
+        } else if let Ok(f) = binding.parse::<f64>() {
+            qry = qry.bind(f);
+        } else if binding == "true" {
+            qry = qry.bind(true);
+        } else if binding == "false" {
+            qry = qry.bind(false);
+        } else {
+            qry = qry.bind(binding.as_str());
+        }
+    }
+
+    // Execute based on action type
+    match cmd.action {
+        Action::Get => {
+            let results = qry.fetch_all().await?;
+            format_output(&results, &cli.format);
+        }
+        Action::Set | Action::Del | Action::Add => {
+            let affected = qry.execute().await?;
+            println!("{} {} rows affected", "✓".green(), affected);
+        }
+    }
+
+    Ok(())
+}
+
+fn format_output(results: &[HashMap<String, serde_json::Value>], format: &OutputFormat) {
+    if results.is_empty() {
+        println!("{}", "(no results)".dimmed());
+        return;
+    }
+
+    match format {
+        OutputFormat::Json => {
+            println!("{}", serde_json::to_string_pretty(results).unwrap_or_default());
+        }
+        OutputFormat::Table => {
+            // Get column names from first row
+            let columns: Vec<&String> = results[0].keys().collect();
+            
+            // Calculate column widths
+            let mut widths: HashMap<&String, usize> = columns.iter().map(|c| (*c, c.len())).collect();
+            for row in results {
+                for (col, val) in row {
+                    let len = val_to_string(val).len();
+                    if let Some(w) = widths.get_mut(col) {
+                        *w = (*w).max(len);
+                    }
+                }
+            }
+
+            // Print header
+            let header: Vec<String> = columns
+                .iter()
+                .map(|c| format!("{:width$}", c, width = widths[*c]))
+                .collect();
+            println!("{}", header.join(" │ ").white().bold());
+            
+            // Print separator
+            let sep: Vec<String> = columns
+                .iter()
+                .map(|c| "─".repeat(widths[*c]))
+                .collect();
+            println!("{}", sep.join("─┼─").dimmed());
+
+            // Print rows
+            for row in results {
+                let cells: Vec<String> = columns
+                    .iter()
+                    .map(|c| {
+                        let val = row.get(*c).map(val_to_string).unwrap_or_default();
+                        format!("{:width$}", val, width = widths[*c])
+                    })
+                    .collect();
+                println!("{}", cells.join(" │ "));
+            }
+
+            println!();
+            println!("{} row(s) returned", results.len().to_string().cyan());
+        }
+    }
+}
+
+fn val_to_string(val: &serde_json::Value) -> String {
+    match val {
+        serde_json::Value::Null => "NULL".to_string(),
+        serde_json::Value::Bool(b) => b.to_string(),
+        serde_json::Value::Number(n) => n.to_string(),
+        serde_json::Value::String(s) => s.clone(),
+        _ => val.to_string(),
     }
 }
 
@@ -232,3 +340,4 @@ fn show_symbols() {
         );
     }
 }
+

@@ -29,12 +29,14 @@
 //! | `$`    | Var      | Parameter binding     |
 
 pub mod ast;
+pub mod engine;
 pub mod error;
 pub mod parser;
 pub mod transpiler;
 
 pub mod prelude {
     pub use crate::ast::*;
+    pub use crate::engine::{QailDB, QailQuery, QailValue};
     pub use crate::error::*;
     pub use crate::parser::parse;
     pub use crate::transpiler::ToSql;
