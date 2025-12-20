@@ -1,53 +1,7 @@
-[package]
-name = "qail"
-version = "0.3.0"
-edition = "2024"
-description = "The Horizontal Query Language — Stop writing strings. Hook your data."
-license = "MIT"
-repository = "https://github.com/qail-rs/qail"
-homepage = "https://qail.rs"
-readme = "README.md"
-keywords = ["sql", "query", "database", "parser", "cli"]
-categories = ["database", "command-line-utilities", "parser-implementations"]
-authors = ["VerysignVL <dev@qail.rs>"]
-
-[[bin]]
-name = "qail"
-path = "src/bin/qail.rs"
-
-[lib]
-name = "qail"
-path = "src/lib.rs"
-
-[dependencies]
-# Parser
-nom = "7.1"
-
-# Database
-sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "chrono", "uuid"] }
-tokio = { version = "1", features = ["full"] }
-chrono = { version = "0.4", features = ["serde"] }
-
-# CLI
-clap = { version = "4", features = ["derive", "env"] }
-colored = "2"
-
-# Serialization
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-
-# Error handling
-thiserror = "1"
-anyhow = "1"
-
-# Config
-toml = "0.8"
-dirs = "5"
-
-[dev-dependencies]
-pretty_assertions = "1"
-
-[profile.release]
-opt-level = 3
-lto = true
-strip = true
+[workspace]
+resolver = "2"
+members = [
+    "qail-core",
+    "qail-macro",
+    "qail-cli",
+]

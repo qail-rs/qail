@@ -14,6 +14,9 @@ pub struct QailCmd {
     pub table: String,
     /// Columns to select/return
     pub columns: Vec<Column>,
+    /// Joins to other tables
+    #[serde(default)]
+    pub joins: Vec<Join>,
     /// Cages (filters, sorts, limits, payloads)
     pub cages: Vec<Cage>,
 }
@@ -24,6 +27,7 @@ impl QailCmd {
         Self {
             action: Action::Get,
             table: table.into(),
+            joins: vec![],
             columns: vec![],
             cages: vec![],
         }
@@ -34,6 +38,7 @@ impl QailCmd {
         Self {
             action: Action::Set,
             table: table.into(),
+            joins: vec![],
             columns: vec![],
             cages: vec![],
         }
@@ -44,6 +49,7 @@ impl QailCmd {
         Self {
             action: Action::Del,
             table: table.into(),
+            joins: vec![],
             columns: vec![],
             cages: vec![],
         }
@@ -54,11 +60,11 @@ impl QailCmd {
         Self {
             action: Action::Add,
             table: table.into(),
+            joins: vec![],
             columns: vec![],
             cages: vec![],
         }
     }
-
     /// Add columns to hook (select).
     pub fn hook(mut self, cols: &[&str]) -> Self {
         self.columns = cols.iter().map(|c| Column::Named(c.to_string())).collect();
@@ -121,6 +127,119 @@ impl QailCmd {
     }
 }
 
+/// A join definition.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Join {
+    pub table: String,
+    pub kind: JoinKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum JoinKind {
+    Inner,
+    Left,
+    Right,
+}
+
+/// A column reference.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Column {
+    /// All columns (*)
+    Star,
+    /// A named column
+    Named(String),
+    /// An aliased column (col AS alias)
+    Aliased { name: String, alias: String },
+    /// An aggregate function (COUNT(col))
+    Aggregate { col: String, func: AggregateFunc },
+    /// Column Definition (for Make keys)
+    Def {
+        name: String,
+        data_type: String,
+        constraints: Vec<Constraint>,
+    },
+    /// Column Modification (for Mod keys)
+    Mod {
+        kind: ModKind,
+        col: Box<Column>,
+    },
+}
+
+impl std::fmt::Display for Column {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Column::Star => write!(f, "*"),
+            Column::Named(name) => write!(f, "{}", name),
+            Column::Aliased { name, alias } => write!(f, "{} AS {}", name, alias),
+            Column::Aggregate { col, func } => write!(f, "{}({})", func, col),
+            Column::Def {
+                name,
+                data_type,
+                constraints,
+            } => {
+                write!(f, "{}:{}", name, data_type)?;
+                for c in constraints {
+                    write!(f, "^{}", c)?;
+                }
+                Ok(())
+            }
+            Column::Mod { kind, col } => match kind {
+                ModKind::Add => write!(f, "+{}", col),
+                ModKind::Drop => write!(f, "-{}", col),
+            },
+        }
+    }
+}
+
+/// Column modification type
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum ModKind {
+    Add,
+    Drop,
+}
+
+/// Column definition constraints
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Constraint {
+    PrimaryKey,
+    Unique,
+    Nullable,
+}
+
+impl std::fmt::Display for Constraint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Constraint::PrimaryKey => write!(f, "pk"),
+            Constraint::Unique => write!(f, "uniq"),
+            Constraint::Nullable => write!(f, "?"),
+        }
+    }
+}
+
+/// Aggregate functions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AggregateFunc {
+    Count,
+    Sum,
+    Avg,
+    Min,
+    Max,
+}
+
+impl std::fmt::Display for AggregateFunc {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AggregateFunc::Count => write!(f, "COUNT"),
+            AggregateFunc::Sum => write!(f, "SUM"),
+            AggregateFunc::Avg => write!(f, "AVG"),
+            AggregateFunc::Min => write!(f, "MIN"),
+            AggregateFunc::Max => write!(f, "MAX"),
+        }
+    }
+}
+
+
+
 /// The action type (SQL operation).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Action {
@@ -134,6 +253,10 @@ pub enum Action {
     Add,
     /// Generate Rust struct from table schema
     Gen,
+    /// Create Table (Make)
+    Make,
+    /// Modify Table (Mod)
+    Mod,
 }
 
 impl std::fmt::Display for Action {
@@ -144,30 +267,13 @@ impl std::fmt::Display for Action {
             Action::Del => write!(f, "DEL"),
             Action::Add => write!(f, "ADD"),
             Action::Gen => write!(f, "GEN"),
+            Action::Make => write!(f, "MAKE"),
+            Action::Mod => write!(f, "MOD"),
         }
     }
 }
 
-/// A column reference.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum Column {
-    /// All columns (*)
-    Star,
-    /// A named column
-    Named(String),
-    /// An aliased column (col AS alias)
-    Aliased { name: String, alias: String },
-}
 
-impl std::fmt::Display for Column {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Column::Star => write!(f, "*"),
-            Column::Named(name) => write!(f, "{}", name),
-            Column::Aliased { name, alias } => write!(f, "{} AS {}", name, alias),
-        }
-    }
-}
 
 /// A cage (constraint block) in the query.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

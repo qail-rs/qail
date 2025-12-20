@@ -18,6 +18,8 @@ impl ToSql for QailCmd {
             Action::Del => self.to_delete_sql(),
             Action::Add => self.to_insert_sql(),
             Action::Gen => format!("-- gen::{}  (generates Rust struct, not SQL)", self.table),
+            Action::Make => self.to_create_table_sql(),
+            Action::Mod => self.to_alter_table_sql(),
         }
     }
 }
@@ -38,6 +40,33 @@ impl QailCmd {
         // FROM
         sql.push_str(" FROM ");
         sql.push_str(&self.table);
+
+        // JOINS
+        for join in &self.joins {
+            let kind = match join.kind {
+                JoinKind::Inner => "INNER",
+                JoinKind::Left => "LEFT",
+                JoinKind::Right => "RIGHT",
+            };
+            // Heuristic: target.source_singular_id = source.id
+            // e.g. users -> posts => posts.user_id = users.id
+            let source_singular = self.table.trim_end_matches('s');
+            sql.push_str(&format!(
+                " {} JOIN {} ON {}.{}_id = {}.id",
+                kind, join.table, join.table, source_singular, self.table
+            ));
+        }
+        
+        // Prepare for GROUP BY check
+        let has_aggregates = self.columns.iter().any(|c| matches!(c, Column::Aggregate { .. }));
+        let mut non_aggregated_cols = Vec::new();
+        if has_aggregates {
+             for col in &self.columns {
+                 if let Column::Named(name) = col {
+                     non_aggregated_cols.push(name.clone());
+                 }
+             }
+        }
 
         // Process cages
         let mut where_groups: Vec<String> = Vec::new();
@@ -90,6 +119,12 @@ impl QailCmd {
             sql.push_str(&where_groups.join(" AND "));
         }
 
+        // GROUP BY
+        if !non_aggregated_cols.is_empty() {
+            sql.push_str(" GROUP BY ");
+            sql.push_str(&non_aggregated_cols.join(", "));
+        }
+
         // ORDER BY
         if let Some(order) = order_by {
             sql.push_str(" ORDER BY ");
@@ -122,6 +157,21 @@ impl QailCmd {
         for cage in &self.cages {
             if let CageKind::Filter = cage.kind {
                 if is_first_filter {
+                    fn map_type(t: &str) -> &str {
+                        match t {
+                            "str" | "text" | "string" => "VARCHAR(255)",
+                            "int" | "i32" => "INT",
+                            "bigint" | "i64" => "BIGINT",
+                            "uuid" => "UUID",
+                            "bool" | "boolean" => "BOOLEAN",
+                            "dec" | "decimal" => "DECIMAL",
+                            "float" | "f64" => "DOUBLE PRECISION",
+                            "serial" => "SERIAL",
+                            "timestamp" | "time" => "TIMESTAMP",
+                            "json" | "jsonb" => "JSONB",
+                            _ => t, // usage of raw types if unknown
+                        }
+                    }
                     // First filter cage is the SET payload
                     for cond in &cage.conditions {
                         set_clauses.push(format!("{} = {}", cond.column, cond.value));
@@ -201,6 +251,96 @@ impl QailCmd {
         }
 
         sql
+    }
+
+    /// Generate CREATE TABLE SQL.
+    fn to_create_table_sql(&self) -> String {
+        let mut sql = String::new();
+        sql.push_str("CREATE TABLE ");
+        sql.push_str(&self.table);
+        sql.push_str(" (\n");
+
+        let mut defs = Vec::new();
+        for col in &self.columns {
+            if let Column::Def {
+                name,
+                data_type,
+                constraints,
+            } = col
+            {
+                let sql_type = map_type(data_type);
+                let mut line = format!("    {} {}", name, sql_type);
+
+                // Default to NOT NULL unless Nullable (?) constraint is present
+                let is_nullable = constraints.contains(&Constraint::Nullable);
+                if !is_nullable {
+                    line.push_str(" NOT NULL");
+                }
+
+                if constraints.contains(&Constraint::PrimaryKey) {
+                    line.push_str(" PRIMARY KEY");
+                }
+                if constraints.contains(&Constraint::Unique) {
+                    line.push_str(" UNIQUE");
+                }
+                defs.push(line);
+            }
+        }
+        sql.push_str(&defs.join(",\n"));
+        sql.push_str("\n)");
+        sql
+    }
+
+    /// Generate ALTER TABLE SQL.
+    fn to_alter_table_sql(&self) -> String {
+        let mut stmts = Vec::new();
+        for col in &self.columns {
+            match col {
+                Column::Mod { kind, col } => {
+                    match kind {
+                        ModKind::Add => {
+                            if let Column::Def { name, data_type, constraints } = col.as_ref() {
+                                let sql_type = map_type(data_type);
+                                let mut line = format!("ALTER TABLE {} ADD COLUMN {} {}", self.table, name, sql_type);
+                                
+                                let is_nullable = constraints.contains(&Constraint::Nullable);
+                                if !is_nullable {
+                                    line.push_str(" NOT NULL");
+                                }
+
+                                if constraints.contains(&Constraint::Unique) {
+                                    line.push_str(" UNIQUE");
+                                }
+                                stmts.push(line);
+                            }
+                        }
+                        ModKind::Drop => {
+                            if let Column::Named(name) = col.as_ref() {
+                                stmts.push(format!("ALTER TABLE {} DROP COLUMN {}", self.table, name));
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        stmts.join(";\n")
+    }
+}
+
+fn map_type(t: &str) -> &str {
+    match t {
+        "str" | "text" | "string" => "VARCHAR(255)",
+        "int" | "i32" => "INT",
+        "bigint" | "i64" => "BIGINT",
+        "uuid" => "UUID",
+        "bool" | "boolean" => "BOOLEAN",
+        "dec" | "decimal" => "DECIMAL",
+        "float" | "f64" => "DOUBLE PRECISION",
+        "serial" => "SERIAL",
+        "timestamp" | "time" => "TIMESTAMP",
+        "json" | "jsonb" => "JSONB",
+        _ => t,
     }
 }
 

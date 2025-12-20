@@ -19,6 +19,8 @@ use clap::{Parser, Subcommand, ValueEnum};
 use colored::*;
 use qail::prelude::*;
 use std::collections::HashMap;
+use anyhow::{Result, Context};
+use std::path::Path;
 
 #[derive(Parser)]
 #[command(name = "qail")]
@@ -69,31 +71,55 @@ enum OutputFormat {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Execute a query (get, set, del, add)
+    Run {
+        #[arg(trailing_var_arg = true)]
+        query: Vec<String>,
+    },
+    /// Inspect database schema (not implemented yet)
+    Inspect {
+        table: String,
+    },
+    /// Generate a migration (make, mod)
+    Mig {
+        /// The QAIL migration command (e.g., make::users...)
+        query: String,
+        
+        /// Optional name for the migration (default: inferred from action)
+        #[arg(short, long)]
+        name: Option<String>,
+    },
+    /// Show the symbol reference
+    Symbols,
     /// Parse and explain a QAIL query
     Explain {
-        /// The QAIL query to explain
         query: String,
     },
     /// Interactive REPL mode
     Repl,
-    /// Show the symbol reference
-    Symbols,
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
         Some(Commands::Explain { query }) => explain_query(query),
         Some(Commands::Repl) => run_repl(),
         Some(Commands::Symbols) => show_symbols(),
+        Some(Commands::Mig { query, name }) => {
+             execute_migration(query, name.clone()).await?;
+        },
+        Some(Commands::Run { query }) => {
+             let query = query.join(" ");
+             execute_query(&query, &cli).await?;
+        },
+        Some(Commands::Inspect { table }) => {
+             println!("Inspecting table: {}", table);
+        },
         None => {
             if let Some(query) = &cli.query {
-                if let Err(e) = execute_query(query, &cli).await {
-                    eprintln!("{} {}", "Error:".red().bold(), e);
-                    std::process::exit(1);
-                }
+               execute_query(query, &cli).await?;
             } else {
                 println!("{}", "🪝 QAIL — The Horizontal Query Language".cyan().bold());
                 println!();
@@ -103,15 +129,17 @@ async fn main() {
             }
         }
     }
+
+    Ok(())
 }
 
-async fn execute_query(query: &str, cli: &Cli) -> Result<(), QailError> {
+async fn execute_query(query: &str, cli: &Cli) -> Result<()> {
     if cli.verbose {
         println!("{} {}", "Input:".dimmed(), query.yellow());
     }
 
     // Parse the query
-    let cmd = qail::parse(query)?;
+    let cmd = qail::parse(query).map_err(|e| anyhow::anyhow!("Parse error: {}", e))?;
     let sql = cmd.to_sql();
 
     // Dry run or no database URL - just show SQL
@@ -144,16 +172,16 @@ async fn execute_query(query: &str, cli: &Cli) -> Result<(), QailError> {
         println!("{} {}", "Connecting to:".dimmed(), db_url);
     }
 
-    let db = QailDB::connect(db_url).await?;
+    let db = QailDB::connect(db_url).await.map_err(|e| anyhow::anyhow!("DB Connection error: {}", e))?;
     
     // Handle Gen action separately
     if cmd.action == Action::Gen {
-        let columns = qail::schema::get_table_schema(db.pool(), &cmd.table).await?;
+        let columns = qail::schema::get_table_schema(db.pool(), &cmd.table).await.map_err(|e| anyhow::anyhow!("Schema error: {}", e))?;
         let struct_code = qail::schema::generate_struct(&cmd.table, &columns);
         
         if let Some(ref path) = cli.output {
             std::fs::write(path, &struct_code)
-                .map_err(|e| QailError::Execution(format!("Failed to write file: {}", e)))?;
+                .context(format!("Failed to write file to {}", path))?;
             println!("{} Wrote struct to {}", "✓".green(), path.cyan());
         } else {
             println!("{}", struct_code);
@@ -190,9 +218,80 @@ async fn execute_query(query: &str, cli: &Cli) -> Result<(), QailError> {
             println!("{} {} rows affected", "✓".green(), affected);
         }
         Action::Gen => unreachable!(), // Handled above
+        Action::Make | Action::Mod => {
+            println!("{} DDL commands should be run using 'qail mig'", "⚠".yellow());
+            println!("   Generated SQL: {}", cmd.to_sql());
+        }
     }
 
     Ok(())
+}
+
+async fn execute_migration(query: &str, name_override: Option<String>) -> Result<()> {
+    let cmd = qail::parse(query).map_err(|e| anyhow::anyhow!("Parse error: {}", e))?;
+    
+    // Validate action
+    if !matches!(cmd.action, Action::Make | Action::Mod) {
+         anyhow::bail!("Only 'make' and 'mod' actions are supported for migrations. Got: {}", cmd.action);
+    }
+
+    let up_sql = cmd.to_sql();
+    let down_sql = generate_down_sql(&cmd);
+
+    // Generate filename
+    let timestamp = chrono::Local::now().format("%Y%m%d%H%M%S");
+    let action_name = match cmd.action {
+         Action::Make => format!("create_{}", cmd.table),
+         Action::Mod => format!("alter_{}", cmd.table),
+         _ => "migration".to_string(),
+    };
+    let name = name_override.unwrap_or(action_name);
+    let base_filename = format!("{}_{}", timestamp, name);
+
+    // Ensure migrations directory exists
+    tokio::fs::create_dir_all("migrations").await?;
+
+    let up_path = format!("migrations/{}.up.sql", base_filename);
+    let down_path = format!("migrations/{}.down.sql", base_filename);
+
+    tokio::fs::write(&up_path, up_sql).await?;
+    tokio::fs::write(&down_path, down_sql).await?;
+
+    println!("{} Created migration files:", "✓".green());
+    println!("   {} {}", "UP:".cyan(), up_path);
+    println!("   {} {}", "DOWN:".cyan(), down_path);
+
+    Ok(())
+}
+
+fn generate_down_sql(cmd: &QailCmd) -> String {
+    match cmd.action {
+        Action::Make => format!("DROP TABLE IF EXISTS {};", cmd.table),
+        Action::Mod => {
+            let mut stmts = Vec::new();
+            for col in &cmd.columns {
+                 // heuristic reverse
+                 if let Column::Mod { kind, col } = col {
+                     match kind {
+                         ModKind::Add => {
+                             // Reverse Add is Drop
+                             if let Column::Def { name, .. } = col.as_ref() {
+                                 stmts.push(format!("ALTER TABLE {} DROP COLUMN {}", cmd.table, name));
+                             }
+                         }
+                         ModKind::Drop => {
+                             // Reverse Drop is Add
+                             if let Column::Named(name) = col.as_ref() {
+                                 stmts.push(format!("-- TODO: Re-add dropped column '{}' (type unknown)", name));
+                             }
+                         }
+                     }
+                 }
+            }
+            stmts.join(";\n")
+        }
+        _ => "-- No down migration generated".to_string(),
+    }
 }
 
 fn format_output(results: &[HashMap<String, serde_json::Value>], format: &OutputFormat) {

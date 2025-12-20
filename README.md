@@ -26,6 +26,15 @@ get::users•@id@email@role[active=true][lim=1]
 
 One line. Zero ceremony. **Maximum velocity.**
 
+### The Philosophy
+
+1.  **Constraint**: Vertical space is precious. SQL blocks interrupt the flow of code reading. QAIL flows *with* your logic.
+2.  **Density**: Symbols (`@`, `•`, `[]`) convey more information per pixel than keywords (`SELECT`, `FROM`, `WHERE`).
+3.  **The Star Rule**: If you need 50 columns, fetch the struct (`@*`). If you need 3, list them. Listing 20 columns manually is an anti-pattern. QAIL encourages "all or nothing" density.
+
+**Is it still Horizontal?**
+Yes. The *language* itself is horizontal because it uses symbols instead of keywords. But we give you the **Vertical Escape Hatch** (tabs/newlines) so you can organize complex logic however you see fit, without fighting the parser. Horizontal is the *identity*; Vertical is the *layout*.
+
 ---
 
 ## 📖 Quick Reference
@@ -306,6 +315,27 @@ pub struct Condition {
 - [ ] Language server (LSP)
 - [ ] REPL mode
 - [ ] Schema introspection
+
+### E. The Flagship Comparison (Complex Joins)
+
+**Scenario**: Find verified users who joined after 2024 and booked under the 'SUMMER' campaign.
+
+```sql
+-- SQL (7 lines, cognitive load high)
+SELECT u.* 
+FROM users u
+JOIN bookings b ON b.user_id = u.id
+WHERE u.created_at >= '2024-01-01'
+  AND u.email_verified = true
+  AND b.campaign_code ILIKE '%SUMMER%'
+ORDER BY u.created_at DESC
+LIMIT 50;
+```
+
+```bash
+# QAIL (1 line, cognitive load low)
+get::users->bookings•@*[created_at>='2024-01-01'][email_verified=true][bookings.campaign_code~'SUMMER'][^!created_at][lim=50]
+```
 
 ---
 
