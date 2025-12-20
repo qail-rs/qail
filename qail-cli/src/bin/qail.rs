@@ -222,6 +222,10 @@ async fn execute_query(query: &str, cli: &Cli) -> Result<()> {
             println!("{} DDL commands should be run using 'qail mig'", "⚠".yellow());
             println!("   Generated SQL: {}", cmd.to_sql());
         }
+        Action::Over | Action::With => {
+            let results = qry.fetch_all().await?;
+            format_output(&results, &cli.format);
+        }
     }
 
     Ok(())
