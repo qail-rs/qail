@@ -1484,7 +1484,7 @@ dependencies = [
 
 [[package]]
 name = "qail"
-version = "0.5.0-alpha"
+version = "0.5.1-alpha"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1512,7 +1512,7 @@ dependencies = [
 
 [[package]]
 name = "qail-core"
-version = "0.5.0-alpha"
+version = "0.5.1-alpha"
 dependencies = [
  "chrono",
  "colored",
@@ -1528,7 +1528,7 @@ dependencies = [
 
 [[package]]
 name = "qail-macro"
-version = "0.5.0-alpha"
+version = "0.5.1-alpha"
 dependencies = [
  "proc-macro2",
  "qail-core",
