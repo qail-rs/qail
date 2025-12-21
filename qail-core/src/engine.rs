@@ -10,11 +10,19 @@ use crate::transpiler::ToSql;
 use sqlx::postgres::{PgPool, PgPoolOptions, PgRow};
 use sqlx::{Column, Row, TypeInfo};
 use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
+
+/// Cache for prepared statements (QAIL -> SQL mapping).
+pub type StatementCache = Arc<RwLock<HashMap<String, String>>>;
 
 /// A database connection for executing QAIL queries.
 #[derive(Clone)]
 pub struct QailDB {
     pool: PgPool,
+    /// Cache for QAIL -> SQL mappings to avoid reparsing.
+    cache: StatementCache,
+    /// Whether caching is enabled.
+    cache_enabled: bool,
 }
 
 impl QailDB {
@@ -35,7 +43,54 @@ impl QailDB {
             .await
             .map_err(|e| QailError::Connection(e.to_string()))?;
 
-        Ok(Self { pool })
+        Ok(Self {
+            pool,
+            cache: Arc::new(RwLock::new(HashMap::new())),
+            cache_enabled: true,
+        })
+    }
+
+    /// Enable or disable statement caching.
+    pub fn with_cache(mut self, enabled: bool) -> Self {
+        self.cache_enabled = enabled;
+        self
+    }
+
+    /// Clear the statement cache.
+    pub fn clear_cache(&self) {
+        if let Ok(mut cache) = self.cache.write() {
+            cache.clear();
+        }
+    }
+
+    /// Get cache statistics.
+    pub fn cache_stats(&self) -> (usize, bool) {
+        let size = self.cache.read().map(|c| c.len()).unwrap_or(0);
+        (size, self.cache_enabled)
+    }
+
+    /// Get cached SQL for a QAIL query, or parse and cache it.
+    fn get_or_parse(&self, qail: &str) -> Result<String, QailError> {
+        // Check cache first (read lock)
+        if self.cache_enabled {
+            if let Ok(cache) = self.cache.read() {
+                if let Some(sql) = cache.get(qail) {
+                    return Ok(sql.clone());
+                }
+            }
+        }
+
+        // Parse and cache (write lock)
+        let cmd = parser::parse(qail)?;
+        let sql = cmd.to_sql();
+
+        if self.cache_enabled {
+            if let Ok(mut cache) = self.cache.write() {
+                cache.insert(qail.to_string(), sql.clone());
+            }
+        }
+
+        Ok(sql)
     }
 
     /// Create a new query from a QAIL string.
@@ -50,7 +105,12 @@ impl QailDB {
     ///     .await?;
     /// ```
     pub fn query(&self, qail: &str) -> QailQuery {
-        QailQuery::new(self.pool.clone(), qail.to_string())
+        QailQuery::new(
+            self.pool.clone(),
+            qail.to_string(),
+            Some(self.cache.clone()),
+            self.cache_enabled,
+        )
     }
 
     /// Execute a raw SQL query (escape hatch).
@@ -214,6 +274,8 @@ pub struct QailQuery {
     sql: Option<String>,
     bindings: Vec<QailValue>,
     is_raw: bool,
+    cache: Option<StatementCache>,
+    cache_enabled: bool,
 }
 
 /// Dynamic value type for query bindings.
@@ -227,13 +289,15 @@ pub enum QailValue {
 }
 
 impl QailQuery {
-    fn new(pool: PgPool, qail: String) -> Self {
+    fn new(pool: PgPool, qail: String, cache: Option<StatementCache>, cache_enabled: bool) -> Self {
         Self {
             pool,
             qail,
             sql: None,
             bindings: Vec::new(),
             is_raw: false,
+            cache,
+            cache_enabled,
         }
     }
 
@@ -244,6 +308,8 @@ impl QailQuery {
             sql: Some(sql),
             bindings: Vec::new(),
             is_raw: true,
+            cache: None,
+            cache_enabled: false,
         }
     }
 
@@ -282,8 +348,31 @@ impl QailQuery {
         if self.is_raw {
             return Ok(self.sql.clone().unwrap_or_default());
         }
+
+        // Check cache first
+        if self.cache_enabled {
+            if let Some(ref cache) = self.cache {
+                if let Ok(c) = cache.read() {
+                    if let Some(sql) = c.get(&self.qail) {
+                        return Ok(sql.clone());
+                    }
+                }
+            }
+        }
+
+        // Parse and cache
         let cmd = parser::parse(&self.qail)?;
-        Ok(cmd.to_sql())
+        let sql = cmd.to_sql();
+
+        if self.cache_enabled {
+            if let Some(ref cache) = self.cache {
+                if let Ok(mut c) = cache.write() {
+                    c.insert(self.qail.clone(), sql.clone());
+                }
+            }
+        }
+
+        Ok(sql)
     }
 
     /// Fetch all rows as JSON-like maps.

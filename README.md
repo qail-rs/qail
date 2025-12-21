@@ -346,14 +346,14 @@ pub struct Condition {
 - [x] Connection pooling
 - [x] Multi-driver support (Postgres/MySQL/SQLite)
 - [x] Transaction support (`begin()`, `commit()`, `rollback()`)
-- [ ] Prepared statement caching
+- [x] Prepared statement caching (`StatementCache`)
 
 ### Phase 4: Ecosystem ✅
 - [x] VS Code extension (syntax highlighting)
 - [x] `qail!` compile-time macro
 - [x] Struct generation (`gen::`)
 - [x] REPL mode (`qail repl`)
-- [ ] Language server (LSP)
+- [x] Language server (`qail-lsp`)
 
 ### E. The Flagship Comparison (Complex Joins)
 
