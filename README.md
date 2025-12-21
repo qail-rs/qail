@@ -42,9 +42,13 @@ Yes. The *language* itself is horizontal because it uses symbols instead of keyw
 | Symbol | Name       | Function                | SQL Equivalent           |
 |--------|------------|-------------------------|--------------------------|
 | `::`   | The Gate   | Defines the action      | `SELECT`, `INSERT`, `UPDATE` |
+| `!`    | The Unique | Distinct modifier       | `SELECT DISTINCT`        |
 | `•`    | The Pivot  | Connects action to table| `FROM table`             |
 | `@`    | The Hook   | Selects specific columns| `col1, col2`             |
 | `[]`   | The Cage   | Constraints & Filters   | `WHERE`, `LIMIT`, `SET`  |
+| `->`   | The Link   | Inner Join              | `INNER JOIN`             |
+| `<-`   | The Left   | Left Join               | `LEFT JOIN`              |
+| `->>`  | The Right  | Right Join              | `RIGHT JOIN`             |
 | `~`    | The Fuse   | Fuzzy / Partial Match   | `ILIKE '%val%'`          |
 | `\|`   | The Split  | Logical OR              | `OR`                     |
 | `&`    | The Bind   | Logical AND             | `AND`                    |
@@ -53,6 +57,8 @@ Yes. The *language* itself is horizontal because it uses symbols instead of keyw
 | `*`    | The Star   | All / Wildcard          | `*`                      |
 | `[*]`  | The Deep   | Array Unnest            | `UNNEST(arr)`            |
 | `$`    | The Var    | Parameter Injection     | `$1`, `$2`               |
+| `lim=` | The Limit  | Row limit               | `LIMIT n`                |
+| `off=` | The Skip   | Offset for pagination   | `OFFSET n`               |
 
 ---
 
@@ -69,7 +75,7 @@ cargo install qail
 ```toml
 # Cargo.toml
 [dependencies]
-qail = "0.1"
+qail = "0.5.0-alpha"
 ```
 
 ---
@@ -195,14 +201,44 @@ get::ai_knowledge_base•@*
 
 ---
 
-### E. Joins (Coming Soon)
+### E. Joins
 
 ```bash
-# Inner join
-get::orders•@*>>users.id=orders.user_id•@users.email[status=paid]
+# Inner join (default)
+get::users->orders•@name@total
+# → SELECT name, total FROM users INNER JOIN orders ON orders.user_id = users.id
 
-# Left join
-get::products•@*>|categories.id=products.cat_id•@categories.name
+# Left join (include users without orders)
+get::users<-orders•@name@total
+# → SELECT name, total FROM users LEFT JOIN orders ON orders.user_id = users.id
+
+# Right join
+get::orders->>customers•@*
+# → SELECT * FROM orders RIGHT JOIN customers ON customers.order_id = orders.id
+```
+
+---
+
+### F. DISTINCT Queries (v0.5+)
+
+```bash
+# Get unique roles
+get!::users•@role
+# → SELECT DISTINCT role FROM users
+
+# Distinct with filter
+get!::orders•@status[created_at>'2024-01-01']
+# → SELECT DISTINCT status FROM orders WHERE created_at > '2024-01-01'
+```
+
+---
+
+### G. Pagination (OFFSET)
+
+```bash
+# Page 3 (20 items per page)
+get::products•@*[lim=20][off=40]
+# → SELECT * FROM products LIMIT 20 OFFSET 40
 ```
 
 ---
@@ -298,23 +334,26 @@ pub struct Condition {
 - [x] `nom` parser combinators
 - [x] AST generation
 
-### Phase 2: Transpiler 🚧
+### Phase 2: Transpiler ✅
 - [x] PostgreSQL codegen
-- [ ] MySQL codegen
-- [ ] SQLite codegen
-- [ ] Query optimization hints
+- [x] MySQL codegen
+- [x] SQLite codegen
+- [x] JOINs (INNER, LEFT, RIGHT)
+- [x] DISTINCT, OFFSET, RETURNING
 
-### Phase 3: Engine 🔜
-- [ ] Async execution (sqlx)
-- [ ] Connection pooling
+### Phase 3: Engine ✅
+- [x] Async execution (sqlx)
+- [x] Connection pooling
+- [x] Multi-driver support (Postgres/MySQL/SQLite)
 - [ ] Transaction support
 - [ ] Prepared statement caching
 
-### Phase 4: Ecosystem 📋
-- [ ] VS Code extension (syntax highlighting)
+### Phase 4: Ecosystem ✅
+- [x] VS Code extension (syntax highlighting)
+- [x] `qail!` compile-time macro
+- [x] Struct generation (`gen::`)
 - [ ] Language server (LSP)
 - [ ] REPL mode
-- [ ] Schema introspection
 
 ### E. The Flagship Comparison (Complex Joins)
 
