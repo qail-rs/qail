@@ -61,7 +61,7 @@ jobs:
         run: cargo test --workspace
 
       - name: Authenticate with Crates.io
-        uses: rust-lang/simpleinfra/github-actions/crates-io-auth@master
+        uses: rust-lang/crates-io-auth-action@v0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
