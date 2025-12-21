@@ -75,7 +75,7 @@ cargo install qail
 ```toml
 # Cargo.toml
 [dependencies]
-qail = "0.5.0-alpha"
+qail = "0.5.0"
 ```
 
 ---

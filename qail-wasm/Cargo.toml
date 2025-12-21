@@ -1,10 +1,12 @@
 [package]
 name = "qail-wasm"
-version = "0.5.1-alpha"
+version = "0.5.0"
 edition = "2021"
 description = "QAIL parser and transpiler for JavaScript/TypeScript via WebAssembly"
 license = "MIT"
 repository = "https://github.com/qail-rs/qail"
+homepage = "https://qail.rs"
+
 
 [lib]
 crate-type = ["cdylib", "rlib"]
