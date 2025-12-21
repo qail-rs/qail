@@ -58,6 +58,9 @@ pub fn parse(input: &str) -> QailResult<QailCmd> {
 /// Parse the complete QAIL command.
 fn parse_qail_cmd(input: &str) -> IResult<&str, QailCmd> {
     let (input, action) = parse_action(input)?;
+    // Check for ! after action for DISTINCT (e.g., get!::users)
+    let (input, distinct_marker) = opt(char('!'))(input)?;
+    let distinct = distinct_marker.is_some();
     let (input, _) = tag("::")(input)?;
     let (input, table) = parse_identifier(input)?;
     let (input, joins) = parse_joins(input)?;
@@ -76,6 +79,7 @@ fn parse_qail_cmd(input: &str) -> IResult<&str, QailCmd> {
             joins,
             columns,
             cages,
+            distinct,
         },
     ))
 }

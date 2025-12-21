@@ -54,7 +54,11 @@ impl ToSql for QailCmd {
 impl QailCmd {
     /// Generate SELECT SQL.
     fn to_select_sql(&self) -> String {
-        let mut sql = String::from("SELECT ");
+        let mut sql = if self.distinct {
+            String::from("SELECT DISTINCT ")
+        } else {
+            String::from("SELECT ")
+        };
 
         // Columns
         if self.columns.is_empty() {
@@ -670,6 +674,13 @@ mod tests {
         let cmd = parse("get::users->>profiles•@id@name").unwrap();
         let sql = cmd.to_sql();
         assert!(sql.contains("RIGHT JOIN"));
+    }
+
+    #[test]
+    fn test_distinct() {
+        let cmd = parse("get!::users•@role").unwrap();
+        assert!(cmd.distinct);
+        assert_eq!(cmd.to_sql(), "SELECT DISTINCT role FROM users");
     }
 }
 

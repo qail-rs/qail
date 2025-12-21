@@ -19,6 +19,9 @@ pub struct QailCmd {
     pub joins: Vec<Join>,
     /// Cages (filters, sorts, limits, payloads)
     pub cages: Vec<Cage>,
+    /// Whether to use DISTINCT in SELECT
+    #[serde(default)]
+    pub distinct: bool,
 }
 
 impl QailCmd {
@@ -30,6 +33,7 @@ impl QailCmd {
             joins: vec![],
             columns: vec![],
             cages: vec![],
+            distinct: false,
         }
     }
 
@@ -41,6 +45,7 @@ impl QailCmd {
             joins: vec![],
             columns: vec![],
             cages: vec![],
+            distinct: false,
         }
     }
 
@@ -52,6 +57,7 @@ impl QailCmd {
             joins: vec![],
             columns: vec![],
             cages: vec![],
+            distinct: false,
         }
     }
 
@@ -63,6 +69,7 @@ impl QailCmd {
             joins: vec![],
             columns: vec![],
             cages: vec![],
+            distinct: false,
         }
     }
     /// Add columns to hook (select).
