@@ -418,12 +418,110 @@ fn explain_query(query: &str) {
 }
 
 fn run_repl() {
+    use rustyline::error::ReadlineError;
+    use rustyline::DefaultEditor;
+    use qail::parse;
+    use qail::transpiler::ToSql;
+
     println!("{}", "🪝 QAIL REPL — Interactive Mode".cyan().bold());
-    println!("{}", "Type 'exit' or Ctrl+C to quit.".dimmed());
+    println!("{}", "Type queries to see generated SQL. Commands:".dimmed());
+    println!("  {}  - Exit the REPL", ".exit".yellow());
+    println!("  {} - Show symbol reference", ".help".yellow());
+    println!("  {} - Clear screen", ".clear".yellow());
     println!();
 
-    // TODO: Implement actual REPL with rustyline
-    println!("{}", "REPL mode not yet implemented.".yellow());
+    let mut rl = match DefaultEditor::new() {
+        Ok(editor) => editor,
+        Err(e) => {
+            eprintln!("{} {}", "Failed to initialize REPL:".red(), e);
+            return;
+        }
+    };
+
+    // Load history if available
+    let history_path = dirs::home_dir()
+        .map(|p| p.join(".qail_history"))
+        .unwrap_or_default();
+    let _ = rl.load_history(&history_path);
+
+    loop {
+        let prompt = "qail> ".cyan().bold().to_string();
+        match rl.readline(&prompt) {
+            Ok(line) => {
+                let line = line.trim();
+                if line.is_empty() {
+                    continue;
+                }
+
+                // Add to history
+                let _ = rl.add_history_entry(line);
+
+                // Handle commands
+                match line {
+                    ".exit" | ".quit" | "exit" | "quit" => {
+                        println!("{}", "Goodbye! 👋".green());
+                        break;
+                    }
+                    ".help" | "help" => {
+                        show_repl_help();
+                        continue;
+                    }
+                    ".clear" | "clear" => {
+                        print!("\x1B[2J\x1B[1;1H"); // Clear screen
+                        continue;
+                    }
+                    ".symbols" | "symbols" => {
+                        show_symbols();
+                        continue;
+                    }
+                    _ => {}
+                }
+
+                // Parse and transpile
+                match parse(line) {
+                    Ok(cmd) => {
+                        let sql = cmd.to_sql();
+                        println!("{} {}", "→".green(), sql.white().bold());
+                        println!();
+                    }
+                    Err(e) => {
+                        eprintln!("{} {}", "✗".red(), e.to_string().red());
+                    }
+                }
+            }
+            Err(ReadlineError::Interrupted) => {
+                println!("{}", "^C".dimmed());
+                continue;
+            }
+            Err(ReadlineError::Eof) => {
+                println!("{}", "Goodbye! 👋".green());
+                break;
+            }
+            Err(err) => {
+                eprintln!("{} {:?}", "Error:".red(), err);
+                break;
+            }
+        }
+    }
+
+    // Save history
+    let _ = rl.save_history(&history_path);
+}
+
+fn show_repl_help() {
+    println!("{}", "QAIL REPL Commands:".cyan().bold());
+    println!("  {}     - Exit the REPL", ".exit".yellow());
+    println!("  {}     - Show this help", ".help".yellow());
+    println!("  {}    - Clear screen", ".clear".yellow());
+    println!("  {}  - Show symbol reference", ".symbols".yellow());
+    println!();
+    println!("{}", "Query Examples:".cyan().bold());
+    println!("  get::users•@*");
+    println!("  get::orders•@id@total[status=$1][lim=10]");
+    println!("  set::users•[verified=true][id=$1]");
+    println!("  get!::products•@category  (DISTINCT)");
+    println!("  get::users<-profiles•@name@avatar  (LEFT JOIN)");
+    println!();
 }
 
 fn show_symbols() {

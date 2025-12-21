@@ -62,6 +62,149 @@ impl QailDB {
     pub fn pool(&self) -> &PgPool {
         &self.pool
     }
+
+    /// Begin a new transaction.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// let tx = db.begin().await?;
+    /// tx.query("set::users•[balance=100][id=$1]").bind(1).execute().await?;
+    /// tx.query("add::logs•@user_id@action[user_id=$1][action='deposit']").bind(1).execute().await?;
+    /// tx.commit().await?;
+    /// ```
+    pub async fn begin(&self) -> Result<QailTransaction, QailError> {
+        let tx = self.pool.begin().await
+            .map_err(|e| QailError::Connection(format!("Failed to begin transaction: {}", e)))?;
+        Ok(QailTransaction { tx: Some(tx) })
+    }
+}
+
+/// A database transaction for executing multiple QAIL queries atomically.
+pub struct QailTransaction {
+    tx: Option<sqlx::Transaction<'static, sqlx::Postgres>>,
+}
+
+impl QailTransaction {
+    /// Create a query within this transaction.
+    pub fn query(&mut self, qail: &str) -> QailTxQuery<'_> {
+        QailTxQuery::new(self.tx.as_mut().unwrap(), qail.to_string())
+    }
+
+    /// Execute raw SQL within this transaction.
+    pub fn raw(&mut self, sql: &str) -> QailTxQuery<'_> {
+        QailTxQuery::raw(self.tx.as_mut().unwrap(), sql.to_string())
+    }
+
+    /// Commit the transaction.
+    pub async fn commit(mut self) -> Result<(), QailError> {
+        if let Some(tx) = self.tx.take() {
+            tx.commit().await
+                .map_err(|e| QailError::Execution(format!("Failed to commit: {}", e)))?;
+        }
+        Ok(())
+    }
+
+    /// Rollback the transaction.
+    pub async fn rollback(mut self) -> Result<(), QailError> {
+        if let Some(tx) = self.tx.take() {
+            tx.rollback().await
+                .map_err(|e| QailError::Execution(format!("Failed to rollback: {}", e)))?;
+        }
+        Ok(())
+    }
+}
+
+/// A QAIL query within a transaction.
+pub struct QailTxQuery<'a> {
+    tx: &'a mut sqlx::Transaction<'static, sqlx::Postgres>,
+    qail: String,
+    sql: Option<String>,
+    bindings: Vec<QailValue>,
+    is_raw: bool,
+}
+
+impl<'a> QailTxQuery<'a> {
+    fn new(tx: &'a mut sqlx::Transaction<'static, sqlx::Postgres>, qail: String) -> Self {
+        Self {
+            tx,
+            qail,
+            sql: None,
+            bindings: Vec::new(),
+            is_raw: false,
+        }
+    }
+
+    fn raw(tx: &'a mut sqlx::Transaction<'static, sqlx::Postgres>, sql: String) -> Self {
+        Self {
+            tx,
+            qail: String::new(),
+            sql: Some(sql),
+            bindings: Vec::new(),
+            is_raw: true,
+        }
+    }
+
+    /// Bind a value.
+    pub fn bind<T: Into<QailValue>>(mut self, value: T) -> Self {
+        self.bindings.push(value.into());
+        self
+    }
+
+    /// Get the generated SQL.
+    pub fn sql(&self) -> Result<String, QailError> {
+        if self.is_raw {
+            return Ok(self.sql.clone().unwrap_or_default());
+        }
+        let cmd = parser::parse(&self.qail)?;
+        Ok(cmd.to_sql())
+    }
+
+    /// Execute within the transaction.
+    pub async fn execute(self) -> Result<u64, QailError> {
+        let sql = self.sql()?;
+        let mut query = sqlx::query(&sql);
+
+        for binding in &self.bindings {
+            query = match binding {
+                QailValue::Null => query,
+                QailValue::Bool(v) => query.bind(*v),
+                QailValue::Int(v) => query.bind(*v),
+                QailValue::Float(v) => query.bind(*v),
+                QailValue::String(v) => query.bind(v.as_str()),
+            };
+        }
+
+        let result = query
+            .execute(&mut **self.tx)
+            .await
+            .map_err(|e| QailError::Execution(e.to_string()))?;
+
+        Ok(result.rows_affected())
+    }
+
+    /// Fetch all rows within the transaction.
+    pub async fn fetch_all(self) -> Result<Vec<HashMap<String, serde_json::Value>>, QailError> {
+        let sql = self.sql()?;
+        let mut query = sqlx::query(&sql);
+
+        for binding in &self.bindings {
+            query = match binding {
+                QailValue::Null => query,
+                QailValue::Bool(v) => query.bind(*v),
+                QailValue::Int(v) => query.bind(*v),
+                QailValue::Float(v) => query.bind(*v),
+                QailValue::String(v) => query.bind(v.as_str()),
+            };
+        }
+
+        let rows: Vec<PgRow> = query
+            .fetch_all(&mut **self.tx)
+            .await
+            .map_err(|e| QailError::Execution(e.to_string()))?;
+
+        Ok(rows.iter().map(row_to_map).collect())
+    }
 }
 
 /// A QAIL query builder with parameter bindings.

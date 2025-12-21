@@ -345,15 +345,15 @@ pub struct Condition {
 - [x] Async execution (sqlx)
 - [x] Connection pooling
 - [x] Multi-driver support (Postgres/MySQL/SQLite)
-- [ ] Transaction support
+- [x] Transaction support (`begin()`, `commit()`, `rollback()`)
 - [ ] Prepared statement caching
 
 ### Phase 4: Ecosystem ✅
 - [x] VS Code extension (syntax highlighting)
 - [x] `qail!` compile-time macro
 - [x] Struct generation (`gen::`)
+- [x] REPL mode (`qail repl`)
 - [ ] Language server (LSP)
-- [ ] REPL mode
 
 ### E. The Flagship Comparison (Complex Joins)
 

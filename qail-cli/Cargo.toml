@@ -21,3 +21,7 @@ comfy-table = "7.1"
 anyhow = "1.0"
 chrono = "0.4"
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-native-tls", "postgres", "mysql", "sqlite", "chrono", "uuid", "json"] }
+rustyline = "14.0"
+dirs = "5.0"
+
+
