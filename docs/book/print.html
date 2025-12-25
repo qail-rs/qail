@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-1319eb5c.js";
+            window.path_to_searchindex_js = "searchindex-d0f95769.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-62fd9c51.js"></script>
@@ -969,6 +969,46 @@ qail migrate plan old.qail:new.qail --output migration.sql
 
 # With database connection
 qail watch schema.qail --url postgres://... --auto-apply
+</code></pre>
+<h3 id="qail-lint"><a class="header" href="#qail-lint"><code>qail lint</code></a></h3>
+<p>Check schema for best practices and potential issues:</p>
+<pre><code class="language-bash">qail lint schema.qail
+# 🔍 Schema Linter
+# ⚠ 144 warning(s)
+# ℹ 266 info(s)
+#
+# ⚠ users.customer_id Possible FK column without references()
+#   → Consider adding '.references("table", "id")' for referential integrity
+#
+# ⚠ orders Missing updated_at column
+#   → Add 'updated_at TIMESTAMPTZ not_null' for audit trail
+
+# Strict mode (errors only, for CI)
+qail lint schema.qail --strict
+</code></pre>
+<p><strong>Lint Checks:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Check</th><th>Level</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>Missing primary key</td><td>🔴 ERROR</td><td>Every table needs a PK</td></tr>
+<tr><td>Missing created_at/updated_at</td><td>⚠️ WARNING</td><td>Audit trail columns</td></tr>
+<tr><td><code>_id</code> column without <code>references()</code></td><td>⚠️ WARNING</td><td>FK integrity</td></tr>
+<tr><td>Uppercase table names</td><td>⚠️ WARNING</td><td>Use snake_case</td></tr>
+<tr><td>SERIAL vs UUID</td><td>ℹ️ INFO</td><td>Consider UUID for distributed</td></tr>
+<tr><td>Nullable without default</td><td>ℹ️ INFO</td><td>Consider default value</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="qail-migrate-status"><a class="header" href="#qail-migrate-status"><code>qail migrate status</code></a></h3>
+<p>View migration history for a database:</p>
+<pre><code class="language-bash">qail migrate status postgres://...
+# 📋 Migration Status
+#   Database: mydb
+#   Migration table: _qail_migrations
+#   ✓ Migration history table is ready
 </code></pre>
 <h3 id="qail-fmt"><a class="header" href="#qail-fmt"><code>qail fmt</code></a></h3>
 <p>Format QAIL text:</p>
