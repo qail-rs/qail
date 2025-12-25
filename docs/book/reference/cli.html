@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../searchindex-239564be.js";
+            window.path_to_searchindex_js = "../searchindex-e2f0aa18.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-62d1254d.js"></script>
@@ -199,6 +199,23 @@
 <h3 id="qail-diff"><a class="header" href="#qail-diff"><code>qail diff</code></a></h3>
 <p>Compare two schemas and show migration commands:</p>
 <pre><code class="language-bash">qail diff old.qail new.qail
+</code></pre>
+<h3 id="qail-check"><a class="header" href="#qail-check"><code>qail check</code></a></h3>
+<p>Validate a schema file or preview migration safety:</p>
+<pre><code class="language-bash"># Validate schema
+qail check schema.qail
+# ✓ Schema is valid
+#   Tables: 80
+#   Columns: 1110
+#   Indexes: 287
+#   ✓ 82 primary key(s)
+
+# Check migration safety
+qail check old.qail:new.qail
+# ✓ Both schemas are valid
+# Migration preview: 4 operation(s)
+#   ✓ 3 safe operation(s)
+#   ⚠️  1 reversible operation(s)
 </code></pre>
 <h3 id="qail-migrate-up"><a class="header" href="#qail-migrate-up"><code>qail migrate up</code></a></h3>
 <p>Apply migrations:</p>

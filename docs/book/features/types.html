@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../searchindex-239564be.js";
+            window.path_to_searchindex_js = "../searchindex-e2f0aa18.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-62d1254d.js"></script>
@@ -204,6 +204,26 @@
 </tbody>
 </table>
 </div>
+<h2 id="compile-time-type-safety"><a class="header" href="#compile-time-type-safety">Compile-Time Type Safety</a></h2>
+<p>QAIL uses the <code>ColumnType</code> enum for compile-time validation in schema definitions:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_core::migrate::{Column, ColumnType};
+
+// ✅ Compile-time enforced - no typos possible
+Column::new("id", ColumnType::Uuid).primary_key()
+Column::new("name", ColumnType::Text).not_null()
+Column::new("email", ColumnType::Varchar(Some(255))).unique()
+
+// Available types:
+// Uuid, Text, Varchar, Int, BigInt, Serial, BigSerial,
+// Bool, Float, Decimal, Jsonb, Timestamp, Timestamptz, Date, Time, Bytea
+<span class="boring">}</span></code></pre>
+<p><strong>Validation at compile time:</strong></p>
+<ul>
+<li><code>primary_key()</code> validates the type can be a PK (UUID, INT, SERIAL)</li>
+<li><code>unique()</code> validates the type supports indexing (not JSONB, BYTEA)</li>
+</ul>
 <h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
 <h3 id="reading-values"><a class="header" href="#reading-values">Reading Values</a></h3>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
