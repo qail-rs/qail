@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-e2f0aa18.js";
+            window.path_to_searchindex_js = "searchindex-1319eb5c.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-62d1254d.js"></script>
+        <script src="toc-62fd9c51.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -552,6 +552,184 @@ rename users.username -&gt; users.name
 </table>
 </div>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="migration-impact-analyzer"><a class="header" href="#migration-impact-analyzer">Migration Impact Analyzer</a></h1>
+<p>The Migration Impact Analyzer scans your codebase before running migrations to detect breaking changes that could cause runtime errors.</p>
+<h2 id="why-use-it"><a class="header" href="#why-use-it">Why Use It?</a></h2>
+<p>Dropping a table or column is easy—but if your code still references it, you’ll get runtime errors. The analyzer:</p>
+<ol>
+<li><strong>Scans your codebase</strong> for QAIL and raw SQL queries</li>
+<li><strong>Detects breaking changes</strong> like dropped tables/columns</li>
+<li><strong>Shows exact file locations</strong> where code needs updating</li>
+<li><strong>Prevents downtime</strong> by catching issues before they hit production</li>
+</ol>
+<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
+<pre><code class="language-bash">qail migrate analyze old.qail:new.qail --codebase ./src
+</code></pre>
+<h2 id="example-output"><a class="header" href="#example-output">Example Output</a></h2>
+<pre><code>🔍 Migration Impact Analyzer
+
+  Schema: old.qail → new.qail
+  Codebase: ./src
+
+Scanning codebase...
+  Found 395 query references
+
+⚠️  BREAKING CHANGES DETECTED
+
+Affected files: 1
+
+┌─ DROP TABLE promotions (6 references) ─────────────────────────┐
+│ ❌ src/repository/promotion.rs:89 → INSERT INTO promotions (
+│ ❌ src/repository/promotion.rs:264 → SELECT COUNT(*) FROM promotions
+│ ❌ src/repository/promotion.rs:288 → UPDATE promotions SET
+│ ❌ src/repository/promotion.rs:345 → DELETE FROM promotions WHERE
+└────────────────────────────────────────────────────────────────┘
+
+What would you like to do?
+  1. Run anyway (DANGEROUS - will cause 1 runtime errors)
+  2. Dry-run first (show SQL, don't execute)
+  3. Let me fix the code first (exit)
+</code></pre>
+<h2 id="supported-query-patterns"><a class="header" href="#supported-query-patterns">Supported Query Patterns</a></h2>
+<p>The analyzer detects:</p>
+<h3 id="qail-queries"><a class="header" href="#qail-queries">QAIL Queries</a></h3>
+<ul>
+<li><code>get::users</code> → SELECT from users</li>
+<li><code>set::users</code> → UPDATE users</li>
+<li><code>add::users</code> → INSERT INTO users</li>
+<li><code>del::users</code> → DELETE FROM users</li>
+</ul>
+<h3 id="raw-sql"><a class="header" href="#raw-sql">Raw SQL</a></h3>
+<ul>
+<li><code>SELECT ... FROM table</code></li>
+<li><code>INSERT INTO table</code></li>
+<li><code>UPDATE table SET</code></li>
+<li><code>DELETE FROM table</code></li>
+</ul>
+<h2 id="supported-file-types"><a class="header" href="#supported-file-types">Supported File Types</a></h2>
+<ul>
+<li><code>.rs</code> (Rust)</li>
+<li><code>.ts</code> (TypeScript)</li>
+<li><code>.js</code> (JavaScript)</li>
+<li><code>.py</code> (Python)</li>
+</ul>
+<h2 id="breaking-change-types"><a class="header" href="#breaking-change-types">Breaking Change Types</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Change Type</th><th>Severity</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>DROP TABLE</code></td><td>🔴 Critical</td><td>Table referenced in code will cause runtime errors</td></tr>
+<tr><td><code>DROP COLUMN</code></td><td>🔴 Critical</td><td>Column queries will fail</td></tr>
+<tr><td><code>RENAME</code></td><td>🟡 Warning</td><td>Code needs updating to use new name</td></tr>
+<tr><td><code>TYPE CHANGE</code></td><td>🟡 Warning</td><td>May cause type mismatch errors</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<ol>
+<li>
+<p><strong>Always run before <code>migrate up</code></strong></p>
+<pre><code class="language-bash">qail migrate analyze old.qail:new.qail --codebase ./src
+qail migrate up old.qail:new.qail $DATABASE_URL
+</code></pre>
+</li>
+<li>
+<p><strong>Add to CI/CD pipeline</strong></p>
+<pre><code class="language-yaml">- name: Check migration safety
+  run: qail migrate analyze $OLD:$NEW --codebase ./src
+</code></pre>
+</li>
+<li>
+<p><strong>Use with <code>migrate plan</code> for full preview</strong></p>
+<pre><code class="language-bash">qail migrate plan old.qail:new.qail     # See SQL
+qail migrate analyze old.qail:new.qail  # Check codebase
+qail migrate up old.qail:new.qail $URL  # Apply
+</code></pre>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="foreign-key-validation"><a class="header" href="#foreign-key-validation">Foreign Key Validation</a></h1>
+<p>QAIL provides compile-time validation for foreign key references, ensuring your schema is consistent before migrations run.</p>
+<h2 id="defining-foreign-keys"><a class="header" href="#defining-foreign-keys">Defining Foreign Keys</a></h2>
+<p>Use the builder API to define foreign key constraints:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_core::migrate::{Column, ColumnType, ForeignKey, FkAction};
+
+let user_id = Column::new("user_id", ColumnType::Uuid)
+    .references("users", "id")
+    .on_delete(FkAction::Cascade)
+    .on_update(FkAction::NoAction);
+<span class="boring">}</span></code></pre>
+<h2 id="fk-actions"><a class="header" href="#fk-actions">FK Actions</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Action</th><th>SQL</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>FkAction::NoAction</code></td><td><code>NO ACTION</code></td><td>Reject if referenced row exists (default)</td></tr>
+<tr><td><code>FkAction::Cascade</code></td><td><code>CASCADE</code></td><td>Delete/update child rows</td></tr>
+<tr><td><code>FkAction::SetNull</code></td><td><code>SET NULL</code></td><td>Set FK column to NULL</td></tr>
+<tr><td><code>FkAction::SetDefault</code></td><td><code>SET DEFAULT</code></td><td>Set FK column to default value</td></tr>
+<tr><td><code>FkAction::Restrict</code></td><td><code>RESTRICT</code></td><td>Same as NO ACTION but checked immediately</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="schema-validation"><a class="header" href="#schema-validation">Schema Validation</a></h2>
+<p>Call <code>validate()</code> to check all FK references exist:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut schema = Schema::new();
+
+schema.add_table(Table::new("users")
+    .column(Column::new("id", ColumnType::Uuid).primary_key()));
+
+schema.add_table(Table::new("posts")
+    .column(Column::new("id", ColumnType::Uuid).primary_key())
+    .column(Column::new("user_id", ColumnType::Uuid)
+        .references("users", "id")));
+
+// Validate all FK references
+match schema.validate() {
+    Ok(()) =&gt; println!("Schema is valid"),
+    Err(errors) =&gt; {
+        for e in errors {
+            eprintln!("Error: {}", e);
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<h2 id="error-messages"><a class="header" href="#error-messages">Error Messages</a></h2>
+<p>If a FK references a non-existent table or column:</p>
+<pre><code>FK error: posts.user_id references non-existent table 'users'
+FK error: posts.author_id references non-existent column 'users.author_id'
+</code></pre>
+<h2 id="best-practices-1"><a class="header" href="#best-practices-1">Best Practices</a></h2>
+<ol>
+<li>
+<p><strong>Always validate before migrating</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let schema = parse_qail(&amp;content)?;
+schema.validate()?;
+<span class="boring">}</span></code></pre>
+</li>
+<li>
+<p><strong>Use Cascade carefully</strong> - it can delete more data than expected</p>
+</li>
+<li>
+<p><strong>Prefer SetNull for optional relationships</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>.references("categories", "id")
+.on_delete(FkAction::SetNull)
+<span class="boring">}</span></code></pre>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="connection-pooling"><a class="header" href="#connection-pooling">Connection Pooling</a></h1>
 <p>Efficient connection reuse with <code>PgPool</code>.</p>
 <h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
@@ -589,7 +767,7 @@ let idle = pool.idle_count().await;
 // Maximum configured connections
 let max = pool.max_connections();
 <span class="boring">}</span></code></pre>
-<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<h2 id="best-practices-2"><a class="header" href="#best-practices-2">Best Practices</a></h2>
 <ol>
 <li><strong>Create pool once</strong> at application startup</li>
 <li><strong>Share via <code>Arc</code></strong> across threads/tasks</li>
@@ -653,7 +831,7 @@ Column::new("email", ColumnType::Varchar(Some(255))).unique()
 <li><code>primary_key()</code> validates the type can be a PK (UUID, INT, SERIAL)</li>
 <li><code>unique()</code> validates the type supports indexing (not JSONB, BYTEA)</li>
 </ul>
-<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
+<h2 id="usage-1"><a class="header" href="#usage-1">Usage</a></h2>
 <h3 id="reading-values"><a class="header" href="#reading-values">Reading Values</a></h3>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -750,6 +928,47 @@ qail check old.qail:new.qail
 <h3 id="qail-migrate-down"><a class="header" href="#qail-migrate-down"><code>qail migrate down</code></a></h3>
 <p>Rollback migrations:</p>
 <pre><code class="language-bash">qail migrate down old.qail:new.qail postgres://...
+</code></pre>
+<h3 id="qail-migrate-plan"><a class="header" href="#qail-migrate-plan"><code>qail migrate plan</code></a></h3>
+<p>Preview migration SQL without executing (dry-run):</p>
+<pre><code class="language-bash">qail migrate plan old.qail:new.qail
+# 📋 Migration Plan (dry-run)
+# ┌─ UP (2 operations) ─────────────────────────────────┐
+# │ 1. ALTER TABLE users ADD COLUMN verified BOOLEAN
+# │ 2. CREATE INDEX idx_users_email ON users (email)
+# └─────────────────────────────────────────────────────┘
+# ┌─ DOWN (2 operations) ───────────────────────────────┐
+# │ 1. ALTER TABLE users DROP COLUMN verified
+# │ 2. DROP INDEX IF EXISTS idx_users_email
+# └─────────────────────────────────────────────────────┘
+
+# Save to file
+qail migrate plan old.qail:new.qail --output migration.sql
+</code></pre>
+<h3 id="qail-migrate-analyze"><a class="header" href="#qail-migrate-analyze"><code>qail migrate analyze</code></a></h3>
+<p>Analyze codebase for breaking changes before migrating:</p>
+<pre><code class="language-bash">qail migrate analyze old.qail:new.qail --codebase ./src
+# 🔍 Migration Impact Analyzer
+# Scanning codebase...
+#   Found 395 query references
+#
+# ⚠️  BREAKING CHANGES DETECTED
+# ┌─ DROP TABLE promotions (6 references) ─────────────┐
+# │ ❌ src/repository/promotion.rs:89 → INSERT INTO...
+# │ ❌ src/repository/promotion.rs:264 → SELECT...
+# └────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="qail-watch"><a class="header" href="#qail-watch"><code>qail watch</code></a></h3>
+<p>Watch schema file for changes and auto-generate migrations:</p>
+<pre><code class="language-bash">qail watch schema.qail
+# 👀 QAIL Schema Watch Mode
+#    Watching: schema.qail
+#    Press Ctrl+C to stop
+# [14:32:15] ✓ Detected 2 change(s):
+#        ALTER TABLE users ADD COLUMN avatar_url TEXT
+
+# With database connection
+qail watch schema.qail --url postgres://... --auto-apply
 </code></pre>
 <h3 id="qail-fmt"><a class="header" href="#qail-fmt"><code>qail fmt</code></a></h3>
 <p>Format QAIL text:</p>
