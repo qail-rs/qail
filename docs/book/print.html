@@ -1,0 +1,827 @@
+<!DOCTYPE HTML>
+<html lang="en" class="coal sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>QAIL Documentation</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom-ec95d119.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "coal";
+            const default_dark_theme = "coal";
+            window.path_to_searchindex_js = "searchindex-239564be.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-62d1254d.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('coal')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">QAIL Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/qail-rs/qail" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="qail-documentation"><a class="header" href="#qail-documentation">QAIL Documentation</a></h1>
+<blockquote>
+<p><strong>The AST-Native Query Compiler</strong></p>
+</blockquote>
+<p>QAIL compiles typed query ASTs directly to database wire protocols. No SQL strings. No injection surface. Just pure, type-safe queries.</p>
+<h2 id="why-qail"><a class="header" href="#why-qail">Why QAIL?</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Aspect</th><th>SQL Strings</th><th>QAIL AST</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Type Safety</strong></td><td>Runtime errors</td><td>Compile-time</td></tr>
+<tr><td><strong>Injection Risk</strong></td><td>Possible</td><td>Impossible</td></tr>
+<tr><td><strong>Portability</strong></td><td>Dialect-specific</td><td>Universal</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="quick-example"><a class="header" href="#quick-example">Quick Example</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_core::ast::{QailCmd, Operator, SortOrder};
+
+// Build a query with the AST builder
+let cmd = QailCmd::get("users")
+    .columns(["id", "email", "name"])
+    .filter("active", Operator::Eq, true)
+    .order_by("created_at", SortOrder::Desc)
+    .limit(10);
+
+// Execute with qail-pg driver
+let mut driver = PgDriver::connect("localhost", 5432, "user", "db").await?;
+let rows = driver.query(&amp;cmd).await?;
+<span class="boring">}</span></code></pre>
+<h2 id="current-status-60-production-ready"><a class="header" href="#current-status-60-production-ready">Current Status (~60% Production Ready)</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Feature</th><th>Status</th></tr>
+</thead>
+<tbody>
+<tr><td>SSL/TLS</td><td>✅</td></tr>
+<tr><td>SCRAM-SHA-256 Auth</td><td>✅</td></tr>
+<tr><td>Connection Pooling</td><td>✅</td></tr>
+<tr><td>AST-Native Migrations</td><td>✅</td></tr>
+<tr><td>JSON/JSONB Types</td><td>✅</td></tr>
+<tr><td>UUID, Timestamps</td><td>✅</td></tr>
+<tr><td>Arrays</td><td>🚧</td></tr>
+<tr><td>COPY Protocol</td><td>🚧</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="getting-help"><a class="header" href="#getting-help">Getting Help</a></h2>
+<ul>
+<li><a href="https://github.com/qail-rs/qail">GitHub Repository</a></li>
+<li><a href="https://github.com/qail-rs/qail/issues">Issue Tracker</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<h2 id="rust-recommended"><a class="header" href="#rust-recommended">Rust (Recommended)</a></h2>
+<p>Add QAIL to your <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[dependencies]
+qail-core = "0.9"    # AST and Builder
+qail-pg = "0.9"      # PostgreSQL driver
+</code></pre>
+<h2 id="cli"><a class="header" href="#cli">CLI</a></h2>
+<p>Install the QAIL command-line tool:</p>
+<pre><code class="language-bash">cargo install qail
+</code></pre>
+<h2 id="javascripttypescript-wasm"><a class="header" href="#javascripttypescript-wasm">JavaScript/TypeScript (WASM)</a></h2>
+<pre><code class="language-bash">npm install qail-wasm
+</code></pre>
+<h2 id="verify-installation"><a class="header" href="#verify-installation">Verify Installation</a></h2>
+<pre><code class="language-bash">qail --version
+# qail 0.9.5
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h1>
+<h2 id="connect-to-postgresql"><a class="header" href="#connect-to-postgresql">Connect to PostgreSQL</a></h2>
+<pre class="playground"><code class="language-rust">use qail_pg::driver::PgDriver;
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    // Connect with password (SCRAM-SHA-256)
+    let mut driver = PgDriver::connect_with_password(
+        "localhost", 5432, "user", "database", "password"
+    ).await?;
+
+    // Or with SSL/TLS
+    let mut driver = PgDriver::connect(
+        "localhost", 5432, "user", "database"
+    ).await?;
+
+    Ok(())
+}</code></pre>
+<h2 id="execute-your-first-query"><a class="header" href="#execute-your-first-query">Execute Your First Query</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_core::ast::{QailCmd, Operator};
+
+// Build a SELECT query
+let cmd = QailCmd::get("users")
+    .columns(["id", "email"])
+    .filter("active", Operator::Eq, true)
+    .limit(10);
+
+// Execute
+let rows = driver.query(&amp;cmd).await?;
+
+for row in rows {
+    let id: i32 = row.get("id")?;
+    let email: String = row.get("email")?;
+    println!("{}: {}", id, email);
+}
+<span class="boring">}</span></code></pre>
+<h2 id="use-connection-pooling"><a class="header" href="#use-connection-pooling">Use Connection Pooling</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_pg::driver::{PgPool, PoolConfig};
+
+let config = PoolConfig::new("localhost", 5432, "user", "db")
+    .password("secret")
+    .max_connections(20);
+
+let pool = PgPool::connect(config).await?;
+
+// Acquire connection from pool
+let mut conn = pool.acquire().await?;
+conn.simple_query("SELECT 1").await?;
+// Connection automatically returned when dropped
+<span class="boring">}</span></code></pre>
+<h2 id="run-migrations"><a class="header" href="#run-migrations">Run Migrations</a></h2>
+<pre><code class="language-bash"># Pull current schema from database
+qail pull postgres://user:pass@localhost/db &gt; schema.qail
+
+# Create a new version with changes
+# (edit schema.qail manually)
+
+# Diff and apply
+qail diff old.qail new.qail
+qail migrate up old.qail:new.qail postgres://...
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="ast-builder-api"><a class="header" href="#ast-builder-api">AST Builder API</a></h1>
+<p>The recommended way to use QAIL. Build queries as typed Rust structs.</p>
+<h2 id="query-types"><a class="header" href="#query-types">Query Types</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Method</th><th>SQL Equivalent</th></tr>
+</thead>
+<tbody>
+<tr><td><code>QailCmd::get()</code></td><td>SELECT</td></tr>
+<tr><td><code>QailCmd::add()</code></td><td>INSERT</td></tr>
+<tr><td><code>QailCmd::set()</code></td><td>UPDATE</td></tr>
+<tr><td><code>QailCmd::del()</code></td><td>DELETE</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="select-queries"><a class="header" href="#select-queries">SELECT Queries</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_core::ast::{QailCmd, Operator, SortOrder};
+
+let cmd = QailCmd::get("users")
+    .columns(["id", "email", "name"])
+    .filter("active", Operator::Eq, true)
+    .order_by("created_at", SortOrder::Desc)
+    .limit(10)
+    .offset(20);
+<span class="boring">}</span></code></pre>
+<h2 id="insert-queries"><a class="header" href="#insert-queries">INSERT Queries</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let cmd = QailCmd::add("users")
+    .columns(["email", "name"])
+    .values(["alice@example.com", "Alice"])
+    .returning(["id", "created_at"]);
+<span class="boring">}</span></code></pre>
+<h2 id="update-queries"><a class="header" href="#update-queries">UPDATE Queries</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let cmd = QailCmd::set("users")
+    .set_value("status", "active")
+    .set_value("verified_at", "now()")
+    .where_eq("id", 42);
+<span class="boring">}</span></code></pre>
+<h2 id="delete-queries"><a class="header" href="#delete-queries">DELETE Queries</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let cmd = QailCmd::del("users")
+    .where_eq("id", 42);
+<span class="boring">}</span></code></pre>
+<h2 id="builder-methods"><a class="header" href="#builder-methods">Builder Methods</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Method</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>.columns([...])</code></td><td>Select specific columns</td></tr>
+<tr><td><code>.select_all()</code></td><td>SELECT *</td></tr>
+<tr><td><code>.filter(col, op, val)</code></td><td>WHERE condition</td></tr>
+<tr><td><code>.where_eq(col, val)</code></td><td>WHERE col = val</td></tr>
+<tr><td><code>.order_by(col, dir)</code></td><td>ORDER BY</td></tr>
+<tr><td><code>.limit(n)</code></td><td>LIMIT n</td></tr>
+<tr><td><code>.offset(n)</code></td><td>OFFSET n</td></tr>
+<tr><td><code>.left_join(table, on_left, on_right)</code></td><td>LEFT JOIN</td></tr>
+<tr><td><code>.returning([...])</code></td><td>RETURNING clause</td></tr>
+</tbody>
+</table>
+</div>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="text-syntax"><a class="header" href="#text-syntax">Text Syntax</a></h1>
+<p>For CLI, LSP, and WASM playground. Parses to AST internally.</p>
+<h2 id="keywords"><a class="header" href="#keywords">Keywords</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Keyword</th><th>Description</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td><code>get</code></td><td>SELECT query</td><td><code>get users fields *</code></td></tr>
+<tr><td><code>set</code></td><td>UPDATE query</td><td><code>set users values ...</code></td></tr>
+<tr><td><code>del</code></td><td>DELETE query</td><td><code>del users where ...</code></td></tr>
+<tr><td><code>add</code></td><td>INSERT query</td><td><code>add users values ...</code></td></tr>
+<tr><td><code>fields</code></td><td>Select columns</td><td><code>fields id, email</code></td></tr>
+<tr><td><code>where</code></td><td>Filter conditions</td><td><code>where active = true</code></td></tr>
+<tr><td><code>order by</code></td><td>Sort results</td><td><code>order by name desc</code></td></tr>
+<tr><td><code>limit</code></td><td>Limit rows</td><td><code>limit 10</code></td></tr>
+<tr><td><code>offset</code></td><td>Skip rows</td><td><code>offset 20</code></td></tr>
+<tr><td><code>left join</code></td><td>Left outer join</td><td><code>left join profiles</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="simple-select"><a class="header" href="#simple-select">Simple Select</a></h3>
+<pre><code>get users fields *
+</code></pre>
+<p>→ <code>SELECT * FROM users</code></p>
+<h3 id="filtered-query"><a class="header" href="#filtered-query">Filtered Query</a></h3>
+<pre><code>get users 
+    fields id, email, name
+    where active = true
+    order by created_at desc
+    limit 50
+</code></pre>
+<h3 id="join-query"><a class="header" href="#join-query">Join Query</a></h3>
+<pre><code>get users 
+    inner join bookings
+    fields id, email, bookings.total
+    where created_at &gt;= 2024-01-01
+</code></pre>
+<h3 id="insert"><a class="header" href="#insert">Insert</a></h3>
+<pre><code>add users values (email = "alice@example.com", name = "Alice")
+</code></pre>
+<h3 id="update"><a class="header" href="#update">Update</a></h3>
+<pre><code>set users values (status = "active") where id = 42
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="postgresql-driver"><a class="header" href="#postgresql-driver">PostgreSQL Driver</a></h1>
+<p>The <code>qail-pg</code> crate provides a native PostgreSQL driver with SSL/TLS and SCRAM-SHA-256 authentication.</p>
+<h2 id="connection"><a class="header" href="#connection">Connection</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_pg::driver::PgDriver;
+
+// Trust mode (no password)
+let driver = PgDriver::connect("localhost", 5432, "user", "db").await?;
+
+// With password (auto-detects MD5 or SCRAM-SHA-256)
+let driver = PgDriver::connect_with_password(
+    "localhost", 5432, "user", "db", "password"
+).await?;
+<span class="boring">}</span></code></pre>
+<h2 id="ssltls"><a class="header" href="#ssltls">SSL/TLS</a></h2>
+<p>SSL/TLS is automatically negotiated during connection. Requires your PostgreSQL server to have SSL enabled.</p>
+<h2 id="queries"><a class="header" href="#queries">Queries</a></h2>
+<h3 id="simple-query"><a class="header" href="#simple-query">Simple Query</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let rows = driver.simple_query("SELECT 1 as num").await?;
+<span class="boring">}</span></code></pre>
+<h3 id="ast-query"><a class="header" href="#ast-query">AST Query</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let cmd = QailCmd::get("users").select_all().limit(10);
+let rows = driver.query(&amp;cmd).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="query-pipeline-batch"><a class="header" href="#query-pipeline-batch">Query Pipeline (Batch)</a></h3>
+<p>Send multiple queries in one network round-trip:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let results = driver.query_pipeline(&amp;[
+    QailCmd::get("users").select_all(),
+    QailCmd::get("orders").select_all(),
+]).await?;
+<span class="boring">}</span></code></pre>
+<h2 id="prepared-statements"><a class="header" href="#prepared-statements">Prepared Statements</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let stmt = driver.prepare("SELECT * FROM users WHERE id = $1").await?;
+let rows = driver.execute_prepared(&amp;stmt, &amp;[&amp;42]).await?;
+<span class="boring">}</span></code></pre>
+<h2 id="row-decoding"><a class="header" href="#row-decoding">Row Decoding</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>for row in rows {
+    let id: i32 = row.get("id")?;
+    let email: String = row.get("email")?;
+    let created_at: Timestamp = row.get("created_at")?;
+}
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="migrations"><a class="header" href="#migrations">Migrations</a></h1>
+<p>QAIL uses an <strong>intent-aware</strong> <code>.qail</code> schema format that solves the ambiguity problem of state-based migrations.</p>
+<h2 id="the-problem-with-jsonstate-based-migrations"><a class="header" href="#the-problem-with-jsonstate-based-migrations">The Problem with JSON/State-Based Migrations</a></h2>
+<pre><code class="language-json">// v1: {"users": {"username": "text"}}
+// v2: {"users": {"name": "text"}}
+</code></pre>
+<p>Did we <strong>rename</strong> <code>username → name</code> or <strong>delete + add</strong>? JSON can’t express intent.</p>
+<h2 id="the-solution-qail-schema-format"><a class="header" href="#the-solution-qail-schema-format">The Solution: <code>.qail</code> Schema Format</a></h2>
+<pre><code class="language-qail"># schema.qail - Human readable, intent-aware
+table users {
+  id serial primary_key
+  name text not_null
+  email text unique
+}
+
+# Migration hints express INTENT
+rename users.username -&gt; users.name
+</code></pre>
+<h2 id="workflow"><a class="header" href="#workflow">Workflow</a></h2>
+<h3 id="1-pull-current-schema"><a class="header" href="#1-pull-current-schema">1. Pull Current Schema</a></h3>
+<pre><code class="language-bash">qail pull postgres://user:pass@localhost/db &gt; v1.qail
+</code></pre>
+<h3 id="2-create-new-version"><a class="header" href="#2-create-new-version">2. Create New Version</a></h3>
+<p>Edit <code>v2.qail</code> with your changes and any migration hints:</p>
+<pre><code class="language-qail">table users {
+  id serial primary_key
+  name text not_null          # was 'username'
+  email text unique
+  created_at timestamp not_null
+}
+
+rename users.username -&gt; users.name
+</code></pre>
+<h3 id="3-preview-migration"><a class="header" href="#3-preview-migration">3. Preview Migration</a></h3>
+<pre><code class="language-bash">qail diff v1.qail v2.qail
+# Output:
+# ALTER TABLE users RENAME COLUMN username TO name;
+# ALTER TABLE users ADD COLUMN created_at TIMESTAMP NOT NULL;
+</code></pre>
+<h3 id="4-apply-migration"><a class="header" href="#4-apply-migration">4. Apply Migration</a></h3>
+<pre><code class="language-bash">qail migrate up v1.qail:v2.qail postgres://...
+</code></pre>
+<h3 id="5-rollback-if-needed"><a class="header" href="#5-rollback-if-needed">5. Rollback (if needed)</a></h3>
+<pre><code class="language-bash">qail migrate down v1.qail:v2.qail postgres://...
+</code></pre>
+<h2 id="migration-hints"><a class="header" href="#migration-hints">Migration Hints</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Hint</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>rename table.old -&gt; table.new</code></td><td>Rename column (not drop+add)</td></tr>
+<tr><td><code>transform expr -&gt; table.col</code></td><td>Data transformation hint</td></tr>
+<tr><td><code>drop confirm table.col</code></td><td>Explicit drop confirmation</td></tr>
+</tbody>
+</table>
+</div>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="connection-pooling"><a class="header" href="#connection-pooling">Connection Pooling</a></h1>
+<p>Efficient connection reuse with <code>PgPool</code>.</p>
+<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_pg::driver::{PgPool, PoolConfig};
+
+let config = PoolConfig::new("localhost", 5432, "user", "database")
+    .password("secret")
+    .max_connections(20)
+    .min_connections(5);
+<span class="boring">}</span></code></pre>
+<h2 id="creating-a-pool"><a class="header" href="#creating-a-pool">Creating a Pool</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let pool = PgPool::connect(config).await?;
+<span class="boring">}</span></code></pre>
+<h2 id="acquiring-connections"><a class="header" href="#acquiring-connections">Acquiring Connections</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// This waits if all connections are in use
+let mut conn = pool.acquire().await?;
+
+// Use the connection
+conn.simple_query("SELECT 1").await?;
+
+// Connection automatically returned to pool when dropped
+<span class="boring">}</span></code></pre>
+<h2 id="pool-stats"><a class="header" href="#pool-stats">Pool Stats</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Current idle connections
+let idle = pool.idle_count().await;
+
+// Maximum configured connections
+let max = pool.max_connections();
+<span class="boring">}</span></code></pre>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<ol>
+<li><strong>Create pool once</strong> at application startup</li>
+<li><strong>Share via <code>Arc</code></strong> across threads/tasks</li>
+<li><strong>Don’t hold connections</strong> longer than needed</li>
+<li><strong>Set appropriate pool size</strong> (CPU cores × 2 is a good start)</li>
+</ol>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::sync::Arc;
+
+let pool = Arc::new(PgPool::connect(config).await?);
+
+// Clone Arc for each task
+let pool_clone = pool.clone();
+tokio::spawn(async move {
+    let conn = pool_clone.acquire().await?;
+    // ...
+});
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="type-system"><a class="header" href="#type-system">Type System</a></h1>
+<p>QAIL provides type conversion between Rust and PostgreSQL.</p>
+<h2 id="supported-types"><a class="header" href="#supported-types">Supported Types</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Rust Type</th><th>PostgreSQL Type</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr><td><code>String</code></td><td>TEXT, VARCHAR</td><td>UTF-8</td></tr>
+<tr><td><code>i32</code></td><td>INT4</td><td>32-bit integer</td></tr>
+<tr><td><code>i64</code></td><td>INT8, BIGINT</td><td>64-bit integer</td></tr>
+<tr><td><code>f64</code></td><td>FLOAT8</td><td>Double precision</td></tr>
+<tr><td><code>bool</code></td><td>BOOLEAN</td><td></td></tr>
+<tr><td><code>Uuid</code></td><td>UUID</td><td>128-bit</td></tr>
+<tr><td><code>Timestamp</code></td><td>TIMESTAMP</td><td>Microsecond precision</td></tr>
+<tr><td><code>Date</code></td><td>DATE</td><td></td></tr>
+<tr><td><code>Time</code></td><td>TIME</td><td></td></tr>
+<tr><td><code>Json</code></td><td>JSON, JSONB</td><td></td></tr>
+<tr><td><code>Decimal</code></td><td>NUMERIC</td><td>Arbitrary precision</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
+<h3 id="reading-values"><a class="header" href="#reading-values">Reading Values</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_pg::types::{Timestamp, Uuid, Json};
+
+for row in rows {
+    let id: i32 = row.get("id")?;
+    let uuid: Uuid = row.get("uuid")?;
+    let created: Timestamp = row.get("created_at")?;
+    let data: Json = row.get("metadata")?;
+}
+<span class="boring">}</span></code></pre>
+<h3 id="temporal-types"><a class="header" href="#temporal-types">Temporal Types</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_pg::types::{Timestamp, Date, Time};
+
+// Timestamp with microsecond precision
+let ts = Timestamp::from_micros(1703520000000000);
+
+// Date only
+let date = Date::from_ymd(2024, 1, 15);
+
+// Time only
+let time = Time::from_hms(14, 30, 0);
+<span class="boring">}</span></code></pre>
+<h3 id="json"><a class="header" href="#json">JSON</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_pg::types::Json;
+
+let json = Json("{"key": "value"}".to_string());
+<span class="boring">}</span></code></pre>
+<h2 id="custom-types"><a class="header" href="#custom-types">Custom Types</a></h2>
+<p>Implement <code>FromPg</code> and <code>ToPg</code> for custom types:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_pg::types::{FromPg, ToPg, TypeError};
+
+impl FromPg for MyType {
+    fn from_pg(bytes: &amp;[u8], oid: u32, format: i16) -&gt; Result&lt;Self, TypeError&gt; {
+        // Decode from wire format
+    }
+}
+
+impl ToPg for MyType {
+    fn to_pg(&amp;self) -&gt; (Vec&lt;u8&gt;, u32, i16) {
+        // Encode to wire format
+        (bytes, oid, format)
+    }
+}
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="cli-commands"><a class="header" href="#cli-commands">CLI Commands</a></h1>
+<p>The <code>qail</code> command-line tool.</p>
+<h2 id="installation-1"><a class="header" href="#installation-1">Installation</a></h2>
+<pre><code class="language-bash">cargo install qail
+</code></pre>
+<h2 id="commands"><a class="header" href="#commands">Commands</a></h2>
+<h3 id="qail-parse"><a class="header" href="#qail-parse"><code>qail parse</code></a></h3>
+<p>Parse QAIL text syntax to SQL:</p>
+<pre><code class="language-bash">qail parse "get users fields * where active = true"
+# SELECT * FROM users WHERE active = true
+</code></pre>
+<h3 id="qail-pull"><a class="header" href="#qail-pull"><code>qail pull</code></a></h3>
+<p>Extract schema from database:</p>
+<pre><code class="language-bash">qail pull postgres://user:pass@localhost/db &gt; schema.qail
+</code></pre>
+<h3 id="qail-diff"><a class="header" href="#qail-diff"><code>qail diff</code></a></h3>
+<p>Compare two schemas and show migration commands:</p>
+<pre><code class="language-bash">qail diff old.qail new.qail
+</code></pre>
+<h3 id="qail-migrate-up"><a class="header" href="#qail-migrate-up"><code>qail migrate up</code></a></h3>
+<p>Apply migrations:</p>
+<pre><code class="language-bash">qail migrate up old.qail:new.qail postgres://...
+</code></pre>
+<h3 id="qail-migrate-down"><a class="header" href="#qail-migrate-down"><code>qail migrate down</code></a></h3>
+<p>Rollback migrations:</p>
+<pre><code class="language-bash">qail migrate down old.qail:new.qail postgres://...
+</code></pre>
+<h3 id="qail-fmt"><a class="header" href="#qail-fmt"><code>qail fmt</code></a></h3>
+<p>Format QAIL text:</p>
+<pre><code class="language-bash">qail fmt "get users fields *" --indent
+</code></pre>
+<h2 id="options"><a class="header" href="#options">Options</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Flag</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-d, --dialect</code></td><td>Target SQL dialect (pg, mysql)</td></tr>
+<tr><td><code>-f, --format</code></td><td>Output format (sql, ast, json)</td></tr>
+<tr><td><code>-v, --verbose</code></td><td>Verbose output</td></tr>
+<tr><td><code>--version</code></td><td>Show version</td></tr>
+<tr><td><code>--help</code></td><td>Show help</td></tr>
+</tbody>
+</table>
+</div>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="api-reference"><a class="header" href="#api-reference">API Reference</a></h1>
+<p>Full API documentation is generated from source code.</p>
+<h2 id="crates"><a class="header" href="#crates">Crates</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Crate</th><th>Description</th><th>Docs</th></tr>
+</thead>
+<tbody>
+<tr><td><code>qail-core</code></td><td>AST, Builder, Parser</td><td><a href="https://docs.rs/qail-core">docs.rs</a></td></tr>
+<tr><td><code>qail-pg</code></td><td>PostgreSQL driver</td><td><a href="https://docs.rs/qail-pg">docs.rs</a></td></tr>
+<tr><td><code>qail-wasm</code></td><td>WASM bindings</td><td><a href="https://npmjs.com/package/qail-wasm">npm</a></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="generate-local-docs"><a class="header" href="#generate-local-docs">Generate Local Docs</a></h2>
+<pre><code class="language-bash">cargo doc --no-deps --open
+</code></pre>
+<h2 id="key-types"><a class="header" href="#key-types">Key Types</a></h2>
+<h3 id="qail-core"><a class="header" href="#qail-core">qail-core</a></h3>
+<ul>
+<li><code>QailCmd</code> - Query command builder</li>
+<li><code>Operator</code> - Comparison operators</li>
+<li><code>SortOrder</code> - ASC/DESC</li>
+<li><code>Expr</code> - Expression AST nodes</li>
+</ul>
+<h3 id="qail-pg"><a class="header" href="#qail-pg">qail-pg</a></h3>
+<ul>
+<li><code>PgDriver</code> - Database connection</li>
+<li><code>PgPool</code> - Connection pool</li>
+<li><code>PgRow</code> - Result row</li>
+<li><code>PgError</code> - Error types</li>
+</ul>
+<h2 id="source-code"><a class="header" href="#source-code">Source Code</a></h2>
+<p>View the source on GitHub:</p>
+<ul>
+<li><a href="https://github.com/qail-rs/qail/tree/main/qail-core">qail-core</a></li>
+<li><a href="https://github.com/qail-rs/qail/tree/main/qail-pg">qail-pg</a></li>
+<li><a href="https://github.com/qail-rs/qail/tree/main/qail-cli">qail-cli</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+
+    </div>
+    </body>
+</html>
