@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-c0ba21ca.js";
+            window.path_to_searchindex_js = "searchindex-e3083e64.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-07f5cd42.js"></script>
@@ -184,19 +184,28 @@
 <p><strong>The AST-Native Query Compiler</strong></p>
 </blockquote>
 <p>QAIL compiles typed query ASTs directly to database wire protocols. No SQL strings. No injection surface. Just pure, type-safe queries.</p>
-<h2 id="why-qail"><a class="header" href="#why-qail">Why QAIL?</a></h2>
+<h2 id="philosophy-ast--meaning"><a class="header" href="#philosophy-ast--meaning">Philosophy: AST = Meaning</a></h2>
+<blockquote>
+<p><strong>If a database doesn’t let us encode semantic intent, we don’t fake it.</strong></p>
+</blockquote>
+<p>QAIL compiles typed query ASTs directly to database wire protocols. No SQL strings. No injection surface.</p>
+<h3 id="supported-databases"><a class="header" href="#supported-databases">Supported Databases</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Aspect</th><th>SQL Strings</th><th>QAIL AST</th></tr>
+<tr><th>Tier</th><th>Category</th><th>Supported</th><th>Why?</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>Type Safety</strong></td><td>Runtime errors</td><td>Compile-time</td></tr>
-<tr><td><strong>Injection Risk</strong></td><td>Possible</td><td>Impossible</td></tr>
-<tr><td><strong>Portability</strong></td><td>Dialect-specific</td><td>Universal</td></tr>
+<tr><td><strong>1</strong></td><td><strong>SQL-AST</strong></td><td><strong>PostgreSQL</strong>, <strong>SQLite</strong></td><td>Open wire protocols allow full AST encoding.</td></tr>
+<tr><td><strong>2</strong></td><td><strong>Document-AST</strong></td><td><strong>MongoDB</strong>, <strong>DynamoDB</strong>, <strong>Qdrant</strong></td><td>Native AST query structure (BSON/JSON).</td></tr>
 </tbody>
 </table>
 </div>
+<h3 id="-not-supported"><a class="header" href="#-not-supported">❌ Not Supported</a></h3>
+<ul>
+<li><strong>Oracle, SQL Server, MySQL:</strong> Proprietary/Closed protocols.</li>
+<li><strong>Redis:</strong> Imperative command model (not a query language).</li>
+</ul>
 <h2 id="quick-example"><a class="header" href="#quick-example">Quick Example</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -213,7 +222,7 @@ let cmd = QailCmd::get("users")
 let mut driver = PgDriver::connect("localhost", 5432, "user", "db").await?;
 let rows = driver.query(&amp;cmd).await?;
 <span class="boring">}</span></code></pre>
-<h2 id="current-status-70-production-ready"><a class="header" href="#current-status-70-production-ready">Current Status (~70% Production Ready)</a></h2>
+<h2 id="current-status-80-production-ready"><a class="header" href="#current-status-80-production-ready">Current Status (~80% Production Ready)</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -225,7 +234,7 @@ let rows = driver.query(&amp;cmd).await?;
 <tr><td>Connection Pooling</td><td>✅</td></tr>
 <tr><td>AST-Native Migrations</td><td>✅</td></tr>
 <tr><td>JSON/JSONB Types</td><td>✅</td></tr>
-<tr><td>UUID, Timestamps</td><td>✅</td></tr>
+<tr><td>UUID, Timestamps, INTERVAL</td><td>✅</td></tr>
 <tr><td>CTEs (WITH)</td><td>✅</td></tr>
 <tr><td>DISTINCT ON</td><td>✅</td></tr>
 <tr><td>CASE WHEN</td><td>✅</td></tr>
@@ -233,12 +242,56 @@ let rows = driver.query(&amp;cmd).await?;
 <tr><td>qail-lsp (IDE)</td><td>✅</td></tr>
 <tr><td>COPY Protocol</td><td>✅</td></tr>
 <tr><td>Arrays (Value::Array)</td><td>✅</td></tr>
-<tr><td>Transactions (BEGIN/COMMIT)</td><td>✅</td></tr>
-<tr><td>Savepoints</td><td>🚧</td></tr>
-<tr><td>Prepared Statements</td><td>🚧</td></tr>
+<tr><td>Transactions (BEGIN/COMMIT/ROLLBACK)</td><td>✅</td></tr>
+<tr><td>Query Plan Caching</td><td>✅</td></tr>
+<tr><td>Window Functions (OVER)</td><td>✅</td></tr>
+<tr><td>Subqueries &amp; EXISTS</td><td>✅</td></tr>
+<tr><td>UPSERT (ON CONFLICT)</td><td>✅</td></tr>
+<tr><td>RETURNING Clause</td><td>✅</td></tr>
+<tr><td>LATERAL JOIN</td><td>✅</td></tr>
+<tr><td>Unix Socket &amp; mTLS</td><td>✅</td></tr>
+<tr><td>Savepoints</td><td>✅</td></tr>
+<tr><td>UNION/INTERSECT/EXCEPT</td><td>✅</td></tr>
+<tr><td>TRUNCATE</td><td>✅</td></tr>
+<tr><td>Batch Transactions</td><td>✅</td></tr>
+<tr><td>Statement Timeout</td><td>✅</td></tr>
+<tr><td>EXPLAIN / EXPLAIN ANALYZE</td><td>✅</td></tr>
+<tr><td>LOCK TABLE</td><td>✅</td></tr>
+<tr><td>Connection Timeout</td><td>✅</td></tr>
+<tr><td>Materialized Views</td><td>✅</td></tr>
 </tbody>
 </table>
 </div>
+<blockquote>
+<p><strong>Note:</strong> QAIL’s AST-native design eliminates SQL injection by construction — no strings, no injection surface. Query plan caching (<code>prepare()</code>, <code>pipeline_prepared_fast()</code>) is purely a PostgreSQL performance optimization, not a security measure.</p>
+</blockquote>
+<h2 id="why-some-sql-features-dont-exist-in-qail"><a class="header" href="#why-some-sql-features-dont-exist-in-qail">Why Some SQL Features Don’t Exist in QAIL</a></h2>
+<p>QAIL speaks <strong>AST</strong>, not SQL strings. Many traditional SQL “security features” are solutions to string-based problems that don’t exist in an AST-native world:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>SQL Feature</th><th>Why It Exists</th><th>QAIL Replacement</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Parameterized Queries</strong></td><td>Prevent string injection</td><td>Not needed — <code>Value::Param</code> is a typed AST node, not a string hole</td></tr>
+<tr><td><strong>Prepared Statements</strong> (for security)</td><td>Separate SQL from data</td><td>Not needed — AST has no SQL text to inject into</td></tr>
+<tr><td><strong>Query Escaping</strong></td><td>Sanitize user input</td><td>Not needed — values are typed (<code>Value::Text</code>, <code>Value::Int</code>), never interpolated</td></tr>
+<tr><td><strong>SQL Validators</strong></td><td>Detect malformed queries</td><td>Not needed — invalid AST won’t compile</td></tr>
+<tr><td><strong>LISTEN/NOTIFY</strong></td><td>Pub/sub channels</td><td>Not planned — string-based protocol, outside AST scope</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="the-ast-guarantee"><a class="header" href="#the-ast-guarantee">The AST Guarantee</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// SQL String (vulnerable):
+let sql = format!("SELECT * FROM users WHERE id = {}", user_input);
+
+// QAIL AST (impossible to inject):
+QailCmd::get("users").filter("id", Operator::Eq, user_input)
+// user_input becomes Value::Int(123) or Value::Text("...") 
+// — never interpolated into a string
+<span class="boring">}</span></code></pre>
 <h2 id="getting-help"><a class="header" href="#getting-help">Getting Help</a></h2>
 <ul>
 <li><a href="https://github.com/qail-rs/qail">GitHub Repository</a></li>
