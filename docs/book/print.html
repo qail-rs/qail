@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-d0f95769.js";
+            window.path_to_searchindex_js = "searchindex-f8c91626.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-62fd9c51.js"></script>
+        <script src="toc-0a9c4167.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -440,11 +440,22 @@ let cmd = QailCmd::get("users")
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="postgresql-driver"><a class="header" href="#postgresql-driver">PostgreSQL Driver</a></h1>
-<p>The <code>qail-pg</code> crate provides a native PostgreSQL driver with SSL/TLS and SCRAM-SHA-256 authentication.</p>
+<p>The <code>qail-pg</code> crate provides a native PostgreSQL driver with AST-native wire protocol encoding.</p>
+<h2 id="features"><a class="header" href="#features">Features</a></h2>
+<ul>
+<li><strong>AST-Native</strong> — Direct AST to wire protocol, no SQL strings</li>
+<li><strong>SSL/TLS</strong> — Full TLS with mutual TLS (mTLS) support</li>
+<li><strong>SCRAM-SHA-256</strong> — Secure password authentication</li>
+<li><strong>Connection Pooling</strong> — Efficient resource management</li>
+<li><strong>COPY Protocol</strong> — Bulk insert for high throughput</li>
+<li><strong>Cursors</strong> — Stream large result sets</li>
+<li><strong>Transactions</strong> — BEGIN/COMMIT/ROLLBACK</li>
+</ul>
+<hr>
 <h2 id="connection"><a class="header" href="#connection">Connection</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use qail_pg::driver::PgDriver;
+</span>use qail_pg::PgDriver;
 
 // Trust mode (no password)
 let driver = PgDriver::connect("localhost", 5432, "user", "db").await?;
@@ -454,44 +465,198 @@ let driver = PgDriver::connect_with_password(
     "localhost", 5432, "user", "db", "password"
 ).await?;
 <span class="boring">}</span></code></pre>
+<hr>
 <h2 id="ssltls"><a class="header" href="#ssltls">SSL/TLS</a></h2>
-<p>SSL/TLS is automatically negotiated during connection. Requires your PostgreSQL server to have SSL enabled.</p>
-<h2 id="queries"><a class="header" href="#queries">Queries</a></h2>
-<h3 id="simple-query"><a class="header" href="#simple-query">Simple Query</a></h3>
+<h3 id="standard-tls"><a class="header" href="#standard-tls">Standard TLS</a></h3>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>let rows = driver.simple_query("SELECT 1 as num").await?;
+</span>use qail_pg::PgConnection;
+
+let conn = PgConnection::connect_tls("localhost", 5432, "user", "db").await?;
 <span class="boring">}</span></code></pre>
-<h3 id="ast-query"><a class="header" href="#ast-query">AST Query</a></h3>
+<h3 id="mutual-tls-client-certificates"><a class="header" href="#mutual-tls-client-certificates">Mutual TLS (Client Certificates)</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_pg::{PgConnection, TlsConfig};
+
+let config = TlsConfig {
+    client_cert_pem: cert_bytes,
+    client_key_pem: key_bytes,
+    ca_cert_pem: Some(ca_bytes),
+};
+
+let conn = PgConnection::connect_mtls("localhost", 5432, "user", "db", config).await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="ast-native-queries"><a class="header" href="#ast-native-queries">AST-Native Queries</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let cmd = QailCmd::get("users").select_all().limit(10);
-let rows = driver.query(&amp;cmd).await?;
+
+// Fetch all rows
+let rows = driver.fetch_all(&amp;cmd).await?;
+
+// Fetch one row
+let row = driver.fetch_one(&amp;cmd).await?;
+
+// Execute mutation (returns affected rows)
+let affected = driver.execute(&amp;cmd).await?;
 <span class="boring">}</span></code></pre>
-<h3 id="query-pipeline-batch"><a class="header" href="#query-pipeline-batch">Query Pipeline (Batch)</a></h3>
-<p>Send multiple queries in one network round-trip:</p>
+<hr>
+<h2 id="connection-pooling"><a class="header" href="#connection-pooling">Connection Pooling</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>let results = driver.query_pipeline(&amp;[
-    QailCmd::get("users").select_all(),
-    QailCmd::get("orders").select_all(),
-]).await?;
+</span>use qail_pg::{PgPool, PoolConfig};
+
+let config = PoolConfig::new("localhost", 5432, "user", "db")
+    .password("secret")
+    .max_connections(20)
+    .min_connections(5);
+
+let pool = PgPool::connect(config).await?;
+
+// Acquire connection (auto-returned when dropped)
+let mut conn = pool.acquire().await?;
+conn.simple_query("SELECT 1").await?;
+
+// Check idle count
+let idle = pool.idle_count().await;
 <span class="boring">}</span></code></pre>
-<h2 id="prepared-statements"><a class="header" href="#prepared-statements">Prepared Statements</a></h2>
+<h3 id="pool-timeout-configuration"><a class="header" href="#pool-timeout-configuration">Pool Timeout Configuration</a></h3>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>let stmt = driver.prepare("SELECT * FROM users WHERE id = $1").await?;
-let rows = driver.execute_prepared(&amp;stmt, &amp;[&amp;42]).await?;
+</span>use std::time::Duration;
+
+let config = PoolConfig::new("localhost", 5432, "user", "db")
+    .idle_timeout(Duration::from_secs(600))    // 10 min
+    .acquire_timeout(Duration::from_secs(30))  // 30 sec
+    .connect_timeout(Duration::from_secs(10)); // 10 sec
 <span class="boring">}</span></code></pre>
-<h2 id="row-decoding"><a class="header" href="#row-decoding">Row Decoding</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>idle_timeout</code></td><td>10 min</td><td>Stale connections auto-discarded</td></tr>
+<tr><td><code>acquire_timeout</code></td><td>30 sec</td><td>Max wait for connection</td></tr>
+<tr><td><code>connect_timeout</code></td><td>10 sec</td><td>Max time to establish new connection</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="bulk-insert-copy-protocol"><a class="header" href="#bulk-insert-copy-protocol">Bulk Insert (COPY Protocol)</a></h2>
+<p>High-performance bulk insert using PostgreSQL’s COPY protocol:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>for row in rows {
-    let id: i32 = row.get("id")?;
-    let email: String = row.get("email")?;
-    let created_at: Timestamp = row.get("created_at")?;
+</span>use qail_core::ast::Value;
+
+let cmd = QailCmd::add("users").columns(&amp;["name", "email"]);
+
+let rows = vec![
+    vec![Value::Text("Alice".into()), Value::Text("a@x.com".into())],
+    vec![Value::Text("Bob".into()), Value::Text("b@x.com".into())],
+];
+
+let count = driver.copy_bulk(&amp;cmd, &amp;rows).await?;
+// count = 2
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="cursor-streaming"><a class="header" href="#cursor-streaming">Cursor Streaming</a></h2>
+<p>Stream large result sets in batches:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let cmd = QailCmd::get("logs").select_all();
+
+let batches = driver.stream_cmd(&amp;cmd, 1000).await?;
+for batch in batches {
+    for row in batch {
+        // Process row
+    }
 }
 <span class="boring">}</span></code></pre>
+<hr>
+<h2 id="transactions"><a class="header" href="#transactions">Transactions</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_pg::PgConnection;
+
+let mut conn = PgConnection::connect("localhost", 5432, "user", "db").await?;
+
+conn.begin_transaction().await?;
+// ... queries ...
+conn.commit().await?;
+
+// Or rollback on error
+conn.rollback().await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="-raw-sql-discouraged"><a class="header" href="#-raw-sql-discouraged">⚠️ Raw SQL (Discouraged)</a></h2>
+<p><code>execute_raw</code> exists for legacy compatibility but <strong>violates AST-native philosophy</strong>.</p>
+<p>Use AST-native alternatives:</p>
+<ul>
+<li>Transactions: <code>conn.begin_transaction()</code>, <code>conn.commit()</code>, <code>conn.rollback()</code></li>
+<li>DDL: Use QAIL schema syntax and migrate command</li>
+</ul>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ❌ Avoid
+driver.execute_raw("BEGIN").await?;
+
+// ✅ Prefer AST-native
+let mut conn = pool.acquire().await?;
+conn.begin_transaction().await?;
+// ... queries ...
+conn.commit().await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="row-decoding"><a class="header" href="#row-decoding">Row Decoding</a></h2>
+<h3 id="by-index"><a class="header" href="#by-index">By Index</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let name = row.get_string(0);
+let age = row.get_i32(1);
+<span class="boring">}</span></code></pre>
+<h3 id="by-column-name-recommended"><a class="header" href="#by-column-name-recommended">By Column Name (Recommended)</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Safer - column order changes don't break code
+let name = row.get_string_by_name("name");
+let age = row.get_i32_by_name("age");
+let email = row.get_string_by_name("email");
+
+// Check if NULL
+if row.is_null_by_name("deleted_at") { ... }
+<span class="boring">}</span></code></pre>
+<p>Available get_by_name methods:</p>
+<ul>
+<li><code>get_string_by_name</code>, <code>get_i32_by_name</code>, <code>get_i64_by_name</code></li>
+<li><code>get_f64_by_name</code>, <code>get_bool_by_name</code></li>
+<li><code>get_uuid_by_name</code>, <code>get_json_by_name</code></li>
+<li><code>is_null_by_name</code>, <code>column_index</code></li>
+</ul>
+<hr>
+<h2 id="supported-types"><a class="header" href="#supported-types">Supported Types</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Rust Type</th><th>PostgreSQL Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>i16/i32/i64</code></td><td><code>INT2/INT4/INT8</code></td></tr>
+<tr><td><code>f32/f64</code></td><td><code>FLOAT4/FLOAT8</code></td></tr>
+<tr><td><code>bool</code></td><td><code>BOOLEAN</code></td></tr>
+<tr><td><code>String</code></td><td><code>TEXT/VARCHAR</code></td></tr>
+<tr><td><code>Vec&lt;u8&gt;</code></td><td><code>BYTEA</code></td></tr>
+<tr><td><code>Uuid</code></td><td><code>UUID</code></td></tr>
+<tr><td><code>Timestamp</code></td><td><code>TIMESTAMPTZ</code></td></tr>
+<tr><td><code>Date</code></td><td><code>DATE</code></td></tr>
+<tr><td><code>Time</code></td><td><code>TIME</code></td></tr>
+<tr><td><code>Json</code></td><td><code>JSONB</code></td></tr>
+<tr><td><code>Numeric</code></td><td><code>NUMERIC/DECIMAL</code></td></tr>
+</tbody>
+</table>
+</div>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="migrations"><a class="header" href="#migrations">Migrations</a></h1>
 <p>QAIL uses an <strong>intent-aware</strong> <code>.qail</code> schema format that solves the ambiguity problem of state-based migrations.</p>
@@ -551,6 +716,211 @@ rename users.username -&gt; users.name
 </tbody>
 </table>
 </div>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="named-migrations"><a class="header" href="#named-migrations">Named Migrations</a></h1>
+<p>Named migrations provide version-controlled migration files with metadata for better tracking.</p>
+<h2 id="creating-a-named-migration"><a class="header" href="#creating-a-named-migration">Creating a Named Migration</a></h2>
+<pre><code class="language-bash">qail migrate create add_user_avatars --depends 002_add_users --author orion
+</code></pre>
+<p>Output:</p>
+<pre><code>📝 Creating Named Migration
+
+  ✓ Created: migrations/20251226071129_add_user_avatars.qail
+
+  Migration: 20251226071129_add_user_avatars
+  Depends:   002_add_users
+  Author:    orion
+</code></pre>
+<h2 id="migration-file-format"><a class="header" href="#migration-file-format">Migration File Format</a></h2>
+<pre><code class="language-sql">-- migration: 20251226071129_add_user_avatars
+-- depends: 002_add_users
+-- author: orion
+-- created: 2025-12-26T07:11:29+08:00
+
++table avatars {
+  id UUID primary_key
+  user_id UUID not_null references(users.id)
+  url TEXT not_null
+}
+</code></pre>
+<h2 id="metadata-fields"><a class="header" href="#metadata-fields">Metadata Fields</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>migration</code></td><td>Unique name (timestamp_description)</td></tr>
+<tr><td><code>depends</code></td><td>Comma-separated list of dependencies</td></tr>
+<tr><td><code>author</code></td><td>Author of the migration</td></tr>
+<tr><td><code>created</code></td><td>ISO 8601 timestamp</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="cli-options"><a class="header" href="#cli-options">CLI Options</a></h2>
+<pre><code class="language-bash">qail migrate create &lt;name&gt;
+  -d, --depends &lt;migration&gt;  # Dependencies (comma-separated)
+  -a, --author &lt;name&gt;        # Author attribution
+</code></pre>
+<h2 id="dependency-resolution"><a class="header" href="#dependency-resolution">Dependency Resolution</a></h2>
+<p>QAIL validates dependencies before applying migrations:</p>
+<ul>
+<li>Checks all dependencies exist</li>
+<li>Detects circular dependencies</li>
+<li>Applies in topological order</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="data-safe-migrations"><a class="header" href="#data-safe-migrations">Data-Safe Migrations</a></h1>
+<p>QAIL provides enterprise-grade migration safety features that protect your data during schema changes.</p>
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Feature</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Impact Analysis</strong></td><td>Shows exactly what data will be affected</td></tr>
+<tr><td><strong>Pre-Migration Backup</strong></td><td>Option to backup before destructive changes</td></tr>
+<tr><td><strong>Record-Level Backup</strong></td><td>JSONB-based data backup in database</td></tr>
+<tr><td><strong>Shadow Database</strong></td><td>Blue-green migrations for zero-downtime</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="phase-1-impact-analysis--backup-prompt"><a class="header" href="#phase-1-impact-analysis--backup-prompt">Phase 1: Impact Analysis &amp; Backup Prompt</a></h2>
+<p>When running migrations with destructive operations, QAIL analyzes the impact:</p>
+<pre><code>$ qail migrate up old.qail:new.qail postgres://...
+
+🚨 Migration Impact Analysis
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  DROP COLUMN users.email → 1,234 values at risk
+  DROP TABLE  sessions    → 5,678 rows affected
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Total: 6,912 records at risk
+
+Choose an option:
+  [1] Proceed (I have my own backup)
+  [2] Backup to files (_qail_snapshots/)
+  [3] Backup to database (with rollback support)
+  [4] Cancel migration
+</code></pre>
+<h3 id="options-explained"><a class="header" href="#options-explained">Options Explained</a></h3>
+<ul>
+<li><strong>[1] Proceed</strong> - Continue without QAIL backup (you manage your own)</li>
+<li><strong>[2] File Backup</strong> - Export affected data to <code>_qail_snapshots/</code> directory</li>
+<li><strong>[3] Database Backup</strong> - Store data in <code>_qail_data_snapshots</code> table (enables true rollback)</li>
+<li><strong>[4] Cancel</strong> - Abort the migration</li>
+</ul>
+<h2 id="phase-2-record-level-database-backup"><a class="header" href="#phase-2-record-level-database-backup">Phase 2: Record-Level Database Backup</a></h2>
+<p>When you choose option <code>[3]</code>, QAIL creates a snapshot table:</p>
+<pre><code class="language-sql">-- Automatically created
+CREATE TABLE _qail_data_snapshots (
+    id SERIAL PRIMARY KEY,
+    migration_version VARCHAR(255) NOT NULL,
+    table_name VARCHAR(255) NOT NULL,
+    column_name VARCHAR(255),
+    row_id TEXT NOT NULL,
+    value_json JSONB NOT NULL,
+    snapshot_type VARCHAR(50) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+</code></pre>
+<h3 id="what-gets-backed-up"><a class="header" href="#what-gets-backed-up">What Gets Backed Up</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Operation</th><th>Backup Content</th></tr>
+</thead>
+<tbody>
+<tr><td>DROP COLUMN</td><td>Column values with row IDs</td></tr>
+<tr><td>DROP TABLE</td><td>Full table as JSONB objects</td></tr>
+<tr><td>ALTER TYPE</td><td>Original values before cast</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="true-data-rollback"><a class="header" href="#true-data-rollback">True Data Rollback</a></h3>
+<p>After migration, you can restore data:</p>
+<pre><code class="language-bash"># Schema rollback (adds column back)
+qail migrate down new.qail:old.qail postgres://...
+
+# Data rollback (restores values)
+# Coming in future release: qail rollback --data
+</code></pre>
+<h2 id="phase-3-shadow-database-blue-green"><a class="header" href="#phase-3-shadow-database-blue-green">Phase 3: Shadow Database (Blue-Green)</a></h2>
+<p>For zero-downtime migrations, use shadow database mode:</p>
+<pre><code class="language-bash"># Step 1: Create shadow, apply migrations, sync data
+qail migrate shadow old.qail:new.qail postgres://...
+
+🔄 Shadow Migration Mode
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/4] Creating shadow database: mydb_shadow ✓
+  [2/4] Applying migration to shadow... ✓
+  [3/4] Syncing data from primary to shadow...
+    ✓ users (1,234 rows)
+    ✓ orders (5,678 rows)
+    ✓ Synced 2 tables, 6,912 rows
+  [4/4] Shadow ready for validation
+
+  Shadow URL: postgres://...mydb_shadow
+
+  Available Commands:
+    qail migrate promote → Switch traffic to shadow
+    qail migrate abort   → Drop shadow, keep primary
+</code></pre>
+<h3 id="shadow-workflow"><a class="header" href="#shadow-workflow">Shadow Workflow</a></h3>
+<ol>
+<li><strong>Create Shadow</strong> - New database with new schema</li>
+<li><strong>Apply Migrations</strong> - Run DDL on shadow only</li>
+<li><strong>Sync Data</strong> - Copy data from primary</li>
+<li><strong>Validate</strong> - Test your application against shadow</li>
+<li><strong>Promote or Abort</strong> - Make the decision</li>
+</ol>
+<h3 id="promote-go-live"><a class="header" href="#promote-go-live">Promote (Go Live)</a></h3>
+<pre><code class="language-bash">$ qail migrate promote postgres://...
+
+🚀 Promoting Shadow to Primary
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Renaming mydb → mydb_old_20241226 ✓
+  [2/3] Renaming mydb_shadow → mydb ✓
+  [3/3] Keeping old database as backup
+
+✓ Shadow promoted successfully!
+  Old database preserved as: mydb_old_20241226
+  To clean up: DROP DATABASE mydb_old_20241226
+</code></pre>
+<h3 id="abort-rollback"><a class="header" href="#abort-rollback">Abort (Rollback)</a></h3>
+<pre><code class="language-bash">$ qail migrate abort postgres://...
+
+🛑 Aborting Shadow Migration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Dropping shadow database: mydb_shadow
+
+✓ Shadow database dropped. Primary unchanged.
+</code></pre>
+<h2 id="comparison-with-other-tools"><a class="header" href="#comparison-with-other-tools">Comparison with Other Tools</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Feature</th><th>QAIL</th><th>Prisma</th><th>SeaORM</th><th>Liquibase</th></tr>
+</thead>
+<tbody>
+<tr><td>Schema Migrations</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td>Impact Analysis</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td>Pre-Migration Backup</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td>Record-Level Backup</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td>Shadow Database</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+<tr><td>True Data Rollback</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<ol>
+<li><strong>Always use database backup</strong> for production migrations</li>
+<li><strong>Test in shadow</strong> before promoting</li>
+<li><strong>Keep old database</strong> for 24-48 hours after promotion</li>
+<li><strong>Use transactions</strong> (QAIL does this automatically)</li>
+</ol>
+<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
+<p>No configuration required! Features are enabled by default when destructive operations are detected.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="migration-impact-analyzer"><a class="header" href="#migration-impact-analyzer">Migration Impact Analyzer</a></h1>
 <p>The Migration Impact Analyzer scans your codebase before running migrations to detect breaking changes that could cause runtime errors.</p>
@@ -627,7 +997,7 @@ What would you like to do?
 </tbody>
 </table>
 </div>
-<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<h2 id="best-practices-1"><a class="header" href="#best-practices-1">Best Practices</a></h2>
 <ol>
 <li>
 <p><strong>Always run before <code>migrate up</code></strong></p>
@@ -707,7 +1077,7 @@ match schema.validate() {
 <pre><code>FK error: posts.user_id references non-existent table 'users'
 FK error: posts.author_id references non-existent column 'users.author_id'
 </code></pre>
-<h2 id="best-practices-1"><a class="header" href="#best-practices-1">Best Practices</a></h2>
+<h2 id="best-practices-2"><a class="header" href="#best-practices-2">Best Practices</a></h2>
 <ol>
 <li>
 <p><strong>Always validate before migrating</strong></p>
@@ -730,9 +1100,9 @@ schema.validate()?;
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="connection-pooling"><a class="header" href="#connection-pooling">Connection Pooling</a></h1>
+<h1 id="connection-pooling-1"><a class="header" href="#connection-pooling-1">Connection Pooling</a></h1>
 <p>Efficient connection reuse with <code>PgPool</code>.</p>
-<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
+<h2 id="configuration-1"><a class="header" href="#configuration-1">Configuration</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use qail_pg::driver::{PgPool, PoolConfig};
@@ -767,7 +1137,7 @@ let idle = pool.idle_count().await;
 // Maximum configured connections
 let max = pool.max_connections();
 <span class="boring">}</span></code></pre>
-<h2 id="best-practices-2"><a class="header" href="#best-practices-2">Best Practices</a></h2>
+<h2 id="best-practices-3"><a class="header" href="#best-practices-3">Best Practices</a></h2>
 <ol>
 <li><strong>Create pool once</strong> at application startup</li>
 <li><strong>Share via <code>Arc</code></strong> across threads/tasks</li>
@@ -790,7 +1160,7 @@ tokio::spawn(async move {
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="type-system"><a class="header" href="#type-system">Type System</a></h1>
 <p>QAIL provides type conversion between Rust and PostgreSQL.</p>
-<h2 id="supported-types"><a class="header" href="#supported-types">Supported Types</a></h2>
+<h2 id="supported-types-1"><a class="header" href="#supported-types-1">Supported Types</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>

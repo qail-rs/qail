@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "coal";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../searchindex-d0f95769.js";
+            window.path_to_searchindex_js = "../searchindex-f8c91626.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-62fd9c51.js"></script>
+        <script src="../toc-0a9c4167.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,11 +182,22 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="postgresql-driver"><a class="header" href="#postgresql-driver">PostgreSQL Driver</a></h1>
-<p>The <code>qail-pg</code> crate provides a native PostgreSQL driver with SSL/TLS and SCRAM-SHA-256 authentication.</p>
+<p>The <code>qail-pg</code> crate provides a native PostgreSQL driver with AST-native wire protocol encoding.</p>
+<h2 id="features"><a class="header" href="#features">Features</a></h2>
+<ul>
+<li><strong>AST-Native</strong> — Direct AST to wire protocol, no SQL strings</li>
+<li><strong>SSL/TLS</strong> — Full TLS with mutual TLS (mTLS) support</li>
+<li><strong>SCRAM-SHA-256</strong> — Secure password authentication</li>
+<li><strong>Connection Pooling</strong> — Efficient resource management</li>
+<li><strong>COPY Protocol</strong> — Bulk insert for high throughput</li>
+<li><strong>Cursors</strong> — Stream large result sets</li>
+<li><strong>Transactions</strong> — BEGIN/COMMIT/ROLLBACK</li>
+</ul>
+<hr>
 <h2 id="connection"><a class="header" href="#connection">Connection</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use qail_pg::driver::PgDriver;
+</span>use qail_pg::PgDriver;
 
 // Trust mode (no password)
 let driver = PgDriver::connect("localhost", 5432, "user", "db").await?;
@@ -196,44 +207,198 @@ let driver = PgDriver::connect_with_password(
     "localhost", 5432, "user", "db", "password"
 ).await?;
 <span class="boring">}</span></code></pre>
+<hr>
 <h2 id="ssltls"><a class="header" href="#ssltls">SSL/TLS</a></h2>
-<p>SSL/TLS is automatically negotiated during connection. Requires your PostgreSQL server to have SSL enabled.</p>
-<h2 id="queries"><a class="header" href="#queries">Queries</a></h2>
-<h3 id="simple-query"><a class="header" href="#simple-query">Simple Query</a></h3>
+<h3 id="standard-tls"><a class="header" href="#standard-tls">Standard TLS</a></h3>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>let rows = driver.simple_query("SELECT 1 as num").await?;
+</span>use qail_pg::PgConnection;
+
+let conn = PgConnection::connect_tls("localhost", 5432, "user", "db").await?;
 <span class="boring">}</span></code></pre>
-<h3 id="ast-query"><a class="header" href="#ast-query">AST Query</a></h3>
+<h3 id="mutual-tls-client-certificates"><a class="header" href="#mutual-tls-client-certificates">Mutual TLS (Client Certificates)</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_pg::{PgConnection, TlsConfig};
+
+let config = TlsConfig {
+    client_cert_pem: cert_bytes,
+    client_key_pem: key_bytes,
+    ca_cert_pem: Some(ca_bytes),
+};
+
+let conn = PgConnection::connect_mtls("localhost", 5432, "user", "db", config).await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="ast-native-queries"><a class="header" href="#ast-native-queries">AST-Native Queries</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let cmd = QailCmd::get("users").select_all().limit(10);
-let rows = driver.query(&amp;cmd).await?;
+
+// Fetch all rows
+let rows = driver.fetch_all(&amp;cmd).await?;
+
+// Fetch one row
+let row = driver.fetch_one(&amp;cmd).await?;
+
+// Execute mutation (returns affected rows)
+let affected = driver.execute(&amp;cmd).await?;
 <span class="boring">}</span></code></pre>
-<h3 id="query-pipeline-batch"><a class="header" href="#query-pipeline-batch">Query Pipeline (Batch)</a></h3>
-<p>Send multiple queries in one network round-trip:</p>
+<hr>
+<h2 id="connection-pooling"><a class="header" href="#connection-pooling">Connection Pooling</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>let results = driver.query_pipeline(&amp;[
-    QailCmd::get("users").select_all(),
-    QailCmd::get("orders").select_all(),
-]).await?;
+</span>use qail_pg::{PgPool, PoolConfig};
+
+let config = PoolConfig::new("localhost", 5432, "user", "db")
+    .password("secret")
+    .max_connections(20)
+    .min_connections(5);
+
+let pool = PgPool::connect(config).await?;
+
+// Acquire connection (auto-returned when dropped)
+let mut conn = pool.acquire().await?;
+conn.simple_query("SELECT 1").await?;
+
+// Check idle count
+let idle = pool.idle_count().await;
 <span class="boring">}</span></code></pre>
-<h2 id="prepared-statements"><a class="header" href="#prepared-statements">Prepared Statements</a></h2>
+<h3 id="pool-timeout-configuration"><a class="header" href="#pool-timeout-configuration">Pool Timeout Configuration</a></h3>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>let stmt = driver.prepare("SELECT * FROM users WHERE id = $1").await?;
-let rows = driver.execute_prepared(&amp;stmt, &amp;[&amp;42]).await?;
+</span>use std::time::Duration;
+
+let config = PoolConfig::new("localhost", 5432, "user", "db")
+    .idle_timeout(Duration::from_secs(600))    // 10 min
+    .acquire_timeout(Duration::from_secs(30))  // 30 sec
+    .connect_timeout(Duration::from_secs(10)); // 10 sec
 <span class="boring">}</span></code></pre>
-<h2 id="row-decoding"><a class="header" href="#row-decoding">Row Decoding</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>idle_timeout</code></td><td>10 min</td><td>Stale connections auto-discarded</td></tr>
+<tr><td><code>acquire_timeout</code></td><td>30 sec</td><td>Max wait for connection</td></tr>
+<tr><td><code>connect_timeout</code></td><td>10 sec</td><td>Max time to establish new connection</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="bulk-insert-copy-protocol"><a class="header" href="#bulk-insert-copy-protocol">Bulk Insert (COPY Protocol)</a></h2>
+<p>High-performance bulk insert using PostgreSQL’s COPY protocol:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>for row in rows {
-    let id: i32 = row.get("id")?;
-    let email: String = row.get("email")?;
-    let created_at: Timestamp = row.get("created_at")?;
+</span>use qail_core::ast::Value;
+
+let cmd = QailCmd::add("users").columns(&amp;["name", "email"]);
+
+let rows = vec![
+    vec![Value::Text("Alice".into()), Value::Text("a@x.com".into())],
+    vec![Value::Text("Bob".into()), Value::Text("b@x.com".into())],
+];
+
+let count = driver.copy_bulk(&amp;cmd, &amp;rows).await?;
+// count = 2
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="cursor-streaming"><a class="header" href="#cursor-streaming">Cursor Streaming</a></h2>
+<p>Stream large result sets in batches:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let cmd = QailCmd::get("logs").select_all();
+
+let batches = driver.stream_cmd(&amp;cmd, 1000).await?;
+for batch in batches {
+    for row in batch {
+        // Process row
+    }
 }
 <span class="boring">}</span></code></pre>
+<hr>
+<h2 id="transactions"><a class="header" href="#transactions">Transactions</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use qail_pg::PgConnection;
+
+let mut conn = PgConnection::connect("localhost", 5432, "user", "db").await?;
+
+conn.begin_transaction().await?;
+// ... queries ...
+conn.commit().await?;
+
+// Or rollback on error
+conn.rollback().await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="-raw-sql-discouraged"><a class="header" href="#-raw-sql-discouraged">⚠️ Raw SQL (Discouraged)</a></h2>
+<p><code>execute_raw</code> exists for legacy compatibility but <strong>violates AST-native philosophy</strong>.</p>
+<p>Use AST-native alternatives:</p>
+<ul>
+<li>Transactions: <code>conn.begin_transaction()</code>, <code>conn.commit()</code>, <code>conn.rollback()</code></li>
+<li>DDL: Use QAIL schema syntax and migrate command</li>
+</ul>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ❌ Avoid
+driver.execute_raw("BEGIN").await?;
+
+// ✅ Prefer AST-native
+let mut conn = pool.acquire().await?;
+conn.begin_transaction().await?;
+// ... queries ...
+conn.commit().await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="row-decoding"><a class="header" href="#row-decoding">Row Decoding</a></h2>
+<h3 id="by-index"><a class="header" href="#by-index">By Index</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let name = row.get_string(0);
+let age = row.get_i32(1);
+<span class="boring">}</span></code></pre>
+<h3 id="by-column-name-recommended"><a class="header" href="#by-column-name-recommended">By Column Name (Recommended)</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Safer - column order changes don't break code
+let name = row.get_string_by_name("name");
+let age = row.get_i32_by_name("age");
+let email = row.get_string_by_name("email");
+
+// Check if NULL
+if row.is_null_by_name("deleted_at") { ... }
+<span class="boring">}</span></code></pre>
+<p>Available get_by_name methods:</p>
+<ul>
+<li><code>get_string_by_name</code>, <code>get_i32_by_name</code>, <code>get_i64_by_name</code></li>
+<li><code>get_f64_by_name</code>, <code>get_bool_by_name</code></li>
+<li><code>get_uuid_by_name</code>, <code>get_json_by_name</code></li>
+<li><code>is_null_by_name</code>, <code>column_index</code></li>
+</ul>
+<hr>
+<h2 id="supported-types"><a class="header" href="#supported-types">Supported Types</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Rust Type</th><th>PostgreSQL Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>i16/i32/i64</code></td><td><code>INT2/INT4/INT8</code></td></tr>
+<tr><td><code>f32/f64</code></td><td><code>FLOAT4/FLOAT8</code></td></tr>
+<tr><td><code>bool</code></td><td><code>BOOLEAN</code></td></tr>
+<tr><td><code>String</code></td><td><code>TEXT/VARCHAR</code></td></tr>
+<tr><td><code>Vec&lt;u8&gt;</code></td><td><code>BYTEA</code></td></tr>
+<tr><td><code>Uuid</code></td><td><code>UUID</code></td></tr>
+<tr><td><code>Timestamp</code></td><td><code>TIMESTAMPTZ</code></td></tr>
+<tr><td><code>Date</code></td><td><code>DATE</code></td></tr>
+<tr><td><code>Time</code></td><td><code>TIME</code></td></tr>
+<tr><td><code>Json</code></td><td><code>JSONB</code></td></tr>
+<tr><td><code>Numeric</code></td><td><code>NUMERIC/DECIMAL</code></td></tr>
+</tbody>
+</table>
+</div>
 
                     </main>
 
