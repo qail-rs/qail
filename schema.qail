@@ -1,0 +1,1762 @@
+# QAIL Schema
+
+table charters_drasimos {
+  departure_time TEXT
+  tagline TEXT
+  schedule JSONB
+  is_available BOOLEAN
+  charter_techniques JSONB
+  departure_location TEXT not_null
+  trip_highlights JSONB
+  skaphos_id UUID primary_key
+  target_species JSONB
+  category TEXT
+  price_currency TEXT
+  id UUID primary_key
+  exclusions JSONB
+  name TEXT not_null
+  duration_hours INT not_null
+  slug TEXT primary_key
+  return_time TEXT
+  price_amount INT not_null
+  inclusions JSONB
+  price_label TEXT
+  destinations JSONB
+  deposit_percent INT
+  images JSONB
+  duration_label TEXT not_null
+  what_to_bring JSONB
+  nights INT
+  price_type TEXT not_null
+  charter_style TEXT not_null
+  duration_type TEXT not_null
+  is_published BOOLEAN
+  updated_at TIMESTAMPTZ
+  created_at TIMESTAMPTZ
+  description TEXT
+}
+
+table fishing_diathesi {
+  start_time TEXT primary_key
+  id UUID primary_key
+  available_date DATE primary_key
+  notes TEXT
+  end_time TEXT
+  created_at TIMESTAMPTZ
+  updated_at TIMESTAMPTZ
+  drasimos_id UUID primary_key
+  current_bookings INT
+  price_override INT
+  max_bookings INT
+  is_available BOOLEAN
+}
+
+table operator_boarding_points {
+  id UUID primary_key
+  name VARCHAR not_null
+  waze_url TEXT
+  created_at TIMESTAMPTZ not_null
+  longitude DOUBLE PRECISION
+  harbor_id UUID primary_key
+  operator_id UUID primary_key
+  boarding_type VARCHAR not_null
+  phone VARCHAR
+  address TEXT
+  description TEXT
+  latitude DOUBLE PRECISION
+  deleted_at TIMESTAMPTZ
+  updated_by UUID not_null
+  is_active BOOLEAN not_null
+  created_by UUID not_null
+  updated_at TIMESTAMPTZ not_null
+  is_primary BOOLEAN not_null
+  google_maps_url TEXT
+}
+
+table whatsapp_broadcasts {
+  sent_count INT not_null
+  group_id UUID primary_key
+  recipient_count INT not_null
+  read_count INT not_null
+  completed_at TIMESTAMPTZ
+  template_language VARCHAR not_null
+  id UUID primary_key
+  template_name VARCHAR not_null
+  created_at TIMESTAMPTZ not_null
+  delivered_count INT not_null
+  failed_count INT not_null
+  status VARCHAR
+  name VARCHAR not_null
+  created_by VARCHAR
+  template_variables JSONB
+}
+
+table vessel_type_options {
+  value TEXT primary_key
+  is_active BOOLEAN not_null
+  position INT not_null
+  id UUID primary_key
+  label TEXT not_null
+  created_at TIMESTAMPTZ not_null
+  updated_at TIMESTAMPTZ not_null
+}
+
+table postmark_events {
+  suppression_reason VARCHAR
+  suppress_sending BOOLEAN
+  user_agent TEXT
+  type_code INT
+  delivered_at TIMESTAMPTZ
+  created_at TIMESTAMPTZ not_null
+  read_seconds INT
+  source_ip TEXT
+  origin VARCHAR
+  sender VARCHAR
+  processing_status VARCHAR not_null
+  raw_payload JSONB not_null
+  metadata JSONB
+  recipient VARCHAR primary_key
+  original_link TEXT
+  email VARCHAR
+  platform VARCHAR
+  complaint_id BIGINT
+  bounced_at TIMESTAMPTZ
+  error_message TEXT
+  bounce_description TEXT
+  received_at TIMESTAMPTZ
+  request_headers JSONB
+  event_type VARCHAR primary_key
+  changed_at TIMESTAMPTZ
+  message_stream VARCHAR
+  first_open BOOLEAN
+  bounce_type VARCHAR
+  server_id INT
+  id UUID primary_key
+  click_location VARCHAR
+  message_id VARCHAR primary_key
+  processed_at TIMESTAMPTZ primary_key
+  tag VARCHAR
+}
+
+table schedule_patterns {
+  end_date DATE
+  by_month_day TEXT
+  start_date DATE not_null
+  until DATE
+  by_weekday TEXT
+  id UUID primary_key
+  interval INT not_null
+  count INT
+  created_at TIMESTAMPTZ not_null
+  frequency TEXT not_null
+  by_month TEXT
+}
+
+table registration_otp_codes {
+  otp_code VARCHAR not_null
+  id UUID primary_key
+  expires_at TIMESTAMPTZ not_null
+  email VARCHAR not_null
+  consumed_at TIMESTAMPTZ
+  created_at TIMESTAMPTZ not_null
+}
+
+table odyssey_leg_inventory {
+  updated_at TIMESTAMPTZ
+  reserved INT not_null
+  created_at TIMESTAMPTZ
+  service_date DATE primary_key
+  id UUID primary_key
+  leg_id UUID primary_key
+  odyssey_id UUID primary_key
+  capacity INT not_null
+}
+
+table email_templates {
+  category VARCHAR not_null
+  is_system BOOLEAN not_null
+  sample_data JSONB
+  slug VARCHAR primary_key
+  is_active BOOLEAN not_null
+  created_at TIMESTAMPTZ not_null
+  name VARCHAR not_null
+  tiptap_json JSONB
+  description TEXT
+  created_by UUID primary_key
+  id UUID primary_key
+  updated_at TIMESTAMPTZ not_null
+  updated_by UUID primary_key
+  available_variables JSONB not_null
+  html_body TEXT not_null
+  subject_template TEXT not_null
+  text_body TEXT
+}
+
+table odyssey_pricing_plans {
+  end_date DATE not_null
+  start_date DATE not_null
+  priority INT not_null
+  created_at TIMESTAMPTZ not_null
+  is_active BOOLEAN not_null
+  odyssey_id UUID primary_key
+  id UUID primary_key
+  name VARCHAR not_null
+  currency VARCHAR not_null
+  connection_id UUID primary_key
+  updated_at TIMESTAMPTZ not_null
+}
+
+table service_groups {
+  name VARCHAR not_null
+  class VARCHAR not_null
+  updated_at TIMESTAMPTZ not_null
+  description TEXT
+  id UUID primary_key
+  category VARCHAR not_null
+  deleted_at TIMESTAMPTZ
+  is_active BOOLEAN not_null
+  created_at TIMESTAMPTZ not_null
+  sort_order INT not_null
+}
+
+table whatsapp_phone_configs {
+  waba_id VARCHAR not_null
+  app_id TEXT
+  phone_number_id VARCHAR primary_key
+  app_secret TEXT
+  verify_token TEXT
+  id UUID primary_key
+  phone_number VARCHAR
+  created_at TIMESTAMPTZ not_null
+  display_name VARCHAR not_null
+  updated_at TIMESTAMPTZ not_null
+  is_active BOOLEAN not_null
+  is_test BOOLEAN not_null
+  access_token TEXT
+}
+
+table users {
+  last_login TIMESTAMPTZ
+  email VARCHAR primary_key
+  two_factor_temp_secret TEXT
+  deleted_at TIMESTAMPTZ
+  two_factor_confirmed_at TIMESTAMPTZ
+  two_factor_recovery_codes TEXT
+  last_name VARCHAR not_null
+  display_name VARCHAR
+  profile_image_url TEXT
+  password_hash VARCHAR not_null
+  created_at TIMESTAMPTZ not_null
+  first_name VARCHAR not_null
+  two_factor_enabled BOOLEAN not_null
+  id UUID primary_key
+  phone_numbers JSONB
+  two_factor_secret TEXT
+  updated_at TIMESTAMPTZ not_null
+  password_changed_at TIMESTAMPTZ
+  two_factor_last_used_at TIMESTAMPTZ
+  role TEXT not_null
+  email_verified BOOLEAN not_null
+  is_active BOOLEAN not_null
+}
+
+table refresh_tokens {
+  revoked_at TIMESTAMPTZ
+  user_id UUID primary_key
+  created_at TIMESTAMPTZ not_null
+  token VARCHAR primary_key
+  expires_at TIMESTAMPTZ not_null
+  id UUID primary_key
+}
+
+table vessel_images {
+  display_order INT not_null
+  id UUID primary_key
+  image_url TEXT not_null
+  updated_at TIMESTAMPTZ not_null
+  caption TEXT
+  vessel_id UUID primary_key
+  updated_by UUID not_null
+  created_at TIMESTAMPTZ not_null
+  created_by UUID not_null
+  deleted_at TIMESTAMPTZ
+}
+
+table fishing_alieus {
+  updated_at TIMESTAMPTZ
+  rating DOUBLE PRECISION
+  contact_phone TEXT
+  contact_email TEXT
+  address TEXT
+  logo_url TEXT
+  is_active BOOLEAN
+  review_count INT
+  slug TEXT primary_key
+  is_verified BOOLEAN
+  created_at TIMESTAMPTZ
+  name TEXT not_null
+  city TEXT
+  description TEXT
+  id UUID primary_key
+}
+
+table ssl_certificates {
+  certificate_chain_pem TEXT
+  domain TEXT primary_key
+  updated_at TIMESTAMPTZ not_null
+  id UUID primary_key
+  private_key_pem TEXT not_null
+  is_active BOOLEAN not_null
+  certificate_pem TEXT not_null
+  created_at TIMESTAMPTZ not_null
+  valid_from TIMESTAMPTZ
+  expires_at TIMESTAMPTZ not_null
+  issuer TEXT
+}
+
+table schema_migrations {
+  version VARCHAR primary_key
+  applied_at TIMESTAMPTZ not_null
+}
+
+table odyssey_pricing_fees {
+  per_pax BOOLEAN not_null
+  created_at TIMESTAMPTZ not_null
+  id UUID primary_key
+  name VARCHAR not_null
+  fee_type VARCHAR not_null
+  plan_id UUID primary_key
+  amount DOUBLE PRECISION not_null
+}
+
+table payment_sessions {
+  channel_code TEXT
+  xendit_session_id VARCHAR
+  provider TEXT not_null
+  id UUID primary_key
+  card_exp_year TEXT
+  session_id TEXT primary_key
+  card_masked TEXT
+  card_brand TEXT
+  payment_id TEXT
+  payment_request_id VARCHAR
+  order_id UUID primary_key
+  updated_at TIMESTAMPTZ not_null
+  card_type TEXT
+  processing_fee_amount DOUBLE PRECISION
+  created_at TIMESTAMPTZ not_null
+  va_customer_name TEXT
+  card_issuer TEXT
+  amount BIGINT not_null
+  card_fingerprint TEXT
+  status TEXT not_null
+  foreign_amount DOUBLE PRECISION
+  foreign_currency TEXT
+  processing_fee_percent DOUBLE PRECISION
+  currency TEXT not_null
+  exchange_rate DOUBLE PRECISION
+  card_country TEXT
+  card_exp_month TEXT
+  completed_at TIMESTAMPTZ
+  expires_at TIMESTAMPTZ
+  card_last_four TEXT
+  va_bank_code TEXT
+  va_virtual_account_number TEXT
+}
+
+table app_chat_sessions {
+  closed_at TIMESTAMPTZ
+  welcome_sent BOOLEAN not_null
+  created_at TIMESTAMPTZ not_null
+  admin_id UUID primary_key
+  status TEXT not_null
+  user_id UUID primary_key
+  close_reason TEXT
+  closed_by VARCHAR
+  id UUID primary_key
+  order_id UUID primary_key
+  updated_at TIMESTAMPTZ not_null
+  guest_id TEXT
+}
+
+table group_inquiries {
+  destination VARCHAR
+  contact_name VARCHAR not_null
+  origin VARCHAR
+  updated_at TIMESTAMPTZ not_null
+  contact_phone VARCHAR not_null
+  id UUID primary_key
+  travel_date_start DATE
+  contact_email VARCHAR
+  group_size INT not_null
+  created_at TIMESTAMPTZ not_null
+  assigned_to UUID primary_key
+  travel_date_end DATE
+  status VARCHAR not_null
+  event_type VARCHAR not_null
+  notes TEXT
+}
+
+table charters_skaphos {
+  name TEXT not_null
+  is_active BOOLEAN
+  id UUID primary_key
+  harbor_id UUID primary_key
+  features JSONB
+  slug TEXT primary_key
+  capacity_max INT not_null
+  cabins INT
+  length TEXT
+  alieus_id UUID primary_key
+  year_built INT
+  updated_at TIMESTAMPTZ
+  vessel_type TEXT not_null
+  equipment JSONB
+  category TEXT
+  capacity_min INT not_null
+  description TEXT
+  destination_id UUID primary_key
+  images JSONB
+  created_at TIMESTAMPTZ
+  crew INT not_null
+  base_location TEXT not_null
+  amenities JSONB
+}
+
+table operators {
+  infant_policy TEXT
+  reschedule_policy TEXT not_null
+  created_by UUID not_null
+  seo_title TEXT
+  updated_by UUID not_null
+  created_at TIMESTAMPTZ not_null
+  child_age_policy TEXT
+  seo_description TEXT
+  logo TEXT
+  is_active BOOLEAN not_null
+  seo_article TEXT
+  slug VARCHAR primary_key
+  deleted_at TIMESTAMPTZ
+  logo_url TEXT
+  brand_name VARCHAR not_null
+  operator_type_description TEXT
+  rating DOUBLE PRECISION
+  operator_type TEXT not_null
+  address TEXT not_null
+  refund_policy TEXT not_null
+  refund_policy_description TEXT
+  updated_at TIMESTAMPTZ not_null
+  lead_time_hours INT not_null
+  photo TEXT
+  parent_operator_id UUID primary_key
+  seo_keywords TEXT
+  phone VARCHAR not_null
+  child_age_policy_description TEXT
+  default_departure_dock_id UUID
+  infant_policy_description TEXT
+  reschedule_policy_description TEXT
+  id UUID primary_key
+  description TEXT not_null
+  default_arrival_dock_id UUID
+  legal_name VARCHAR not_null
+}
+
+table cloudflare_images {
+  deleted_at TIMESTAMPTZ
+  uploaded_by UUID primary_key
+  alt_text TEXT
+  width INT
+  height INT
+  mime_type TEXT
+  file_size_bytes BIGINT
+  created_at TIMESTAMPTZ not_null
+  image_id TEXT primary_key
+  cloudflare_created_at TIMESTAMPTZ
+  uploaded_at TIMESTAMPTZ not_null
+  id UUID primary_key
+  filename TEXT
+  description TEXT
+  variants JSONB
+  updated_at TIMESTAMPTZ not_null
+  image_url TEXT not_null
+}
+
+table whatsapp_messages {
+  order_id UUID primary_key
+  sent_at TIMESTAMPTZ
+  bsuid VARCHAR
+  updated_at TIMESTAMPTZ not_null
+  media_url TEXT
+  wa_message_id VARCHAR
+  media_mime_type VARCHAR
+  phone_number VARCHAR not_null
+  delivered_at TIMESTAMPTZ
+  sender_name VARCHAR
+  user_id UUID primary_key
+  our_phone_number_id VARCHAR
+  read_at TIMESTAMPTZ
+  content TEXT
+  error_message TEXT
+  status VARCHAR
+  created_at TIMESTAMPTZ not_null
+  direction VARCHAR not_null
+  id UUID primary_key
+  message_type VARCHAR not_null
+  session_id UUID primary_key
+}
+
+table _sqlx_migrations {
+  execution_time BIGINT not_null
+  checksum TEXT not_null
+  description TEXT not_null
+  version BIGINT primary_key
+  success BOOLEAN not_null
+  installed_on TIMESTAMPTZ not_null
+}
+
+table odyssey_legs {
+  is_enabled BOOLEAN not_null
+  odyssey_id UUID primary_key
+  created_at TIMESTAMPTZ not_null
+  sequence_order INT primary_key
+  updated_at TIMESTAMPTZ not_null
+  to_harbor_id UUID primary_key
+  id UUID primary_key
+  from_harbor_id UUID primary_key
+  arrival_day_offset INT not_null
+  dwell_minutes INT not_null
+  arrival_time TEXT not_null
+  departure_time TEXT not_null
+  departure_day_offset INT not_null
+}
+
+table popular_tickets {
+  arrival_destination_id UUID primary_key
+  facilities JSONB not_null
+  ribbon_text VARCHAR
+  id UUID primary_key
+  ribbon_color VARCHAR
+  position INT not_null
+  title VARCHAR not_null
+  created_by UUID primary_key
+  base_price DOUBLE PRECISION
+  trip_duration VARCHAR
+  created_at TIMESTAMPTZ
+  updated_by UUID primary_key
+  image_url VARCHAR
+  display_price VARCHAR
+  origin_harbor_id UUID primary_key
+  arrival_harbor_id UUID primary_key
+  origin_destination_id UUID primary_key
+  operator_id UUID primary_key
+  is_active BOOLEAN not_null
+  updated_at TIMESTAMPTZ
+  default_departure_date DATE
+}
+
+table orders {
+  pax_breakdown JSONB not_null
+  contact_info JSONB not_null
+  nationality TEXT not_null
+  invoice_number TEXT primary_key
+  user_id UUID primary_key
+  updated_at TIMESTAMPTZ not_null
+  booking_number TEXT primary_key
+  total_fare BIGINT not_null
+  id UUID primary_key
+  status TEXT not_null
+  metadata JSONB
+  created_at TIMESTAMPTZ not_null
+  connection_snapshot JSONB
+  currency TEXT not_null
+  hold_id UUID
+  pricing_breakdown JSONB
+  voyage_id UUID
+  passenger_details JSONB
+  connection_id UUID
+}
+
+table system_settings {
+  recaptcha_enterprise_project_id TEXT
+  wise_api_token TEXT
+  hours_thursday_open VARCHAR
+  support_phone VARCHAR
+  openai_api_key TEXT
+  paypal_client_secret TEXT
+  postmark_invoice_from_email TEXT
+  hours_tuesday_open VARCHAR
+  social_facebook VARCHAR
+  postmark_notify_from_email TEXT
+  postmark_invoice_from_name TEXT
+  google_client_id VARCHAR
+  admin_recaptcha_v3_secret_key TEXT
+  paypal_webhook_id TEXT
+  postmark_from_email TEXT
+  telegram_bot_token TEXT
+  postmark_eticket_from_name TEXT
+  doku_is_production BOOLEAN
+  hours_tuesday_close VARCHAR
+  hours_wednesday_open VARCHAR
+  web_recaptcha_v3_site_key TEXT
+  hours_sunday_close VARCHAR
+  paypal_processing_fee_percent DOUBLE PRECISION
+  doku_secret_key VARCHAR
+  webhook_basic_auth_password TEXT
+  postmark_webhook_secret TEXT
+  hours_sunday_open VARCHAR
+  admin_turnstile_secret_key TEXT
+  cloudflare_images_hash TEXT
+  web_recaptcha_v3_secret_key TEXT
+  webhook_basic_auth_username TEXT
+  web_turnstile_site_key TEXT
+  xendit_secret_key TEXT
+  company_address TEXT
+  cloudflare_images_api_token TEXT
+  telegram_thread_id TEXT
+  hours_wednesday_close VARCHAR
+  telegram_chat_id TEXT
+  recaptcha_enterprise_site_key TEXT
+  postmark_notify_from_name TEXT
+  recaptcha_enterprise_api_key TEXT
+  social_instagram VARCHAR
+  created_at TIMESTAMPTZ not_null
+  google_client_secret VARCHAR
+  postmark_from_name TEXT
+  paypal_mode TEXT
+  xendit_public_key TEXT
+  social_twitter VARCHAR
+  paypal_client_id TEXT
+  hours_thursday_close VARCHAR
+  admin_recaptcha_v3_site_key TEXT
+  cloudflare_images_account_id TEXT
+  hours_saturday_open VARCHAR
+  facebook_app_secret VARCHAR
+  company_name VARCHAR
+  id UUID primary_key
+  hours_friday_open VARCHAR
+  website_url VARCHAR
+  postmark_eticket_from_email TEXT
+  web_turnstile_secret_key TEXT
+  postmark_token TEXT
+  admin_turnstile_site_key TEXT
+  xendit_webhook_verification_token TEXT
+  hours_saturday_close VARCHAR
+  updated_at TIMESTAMPTZ not_null
+  support_email VARCHAR
+  doku_client_id VARCHAR
+  hours_friday_close VARCHAR
+  hours_monday_open VARCHAR
+  facebook_app_id VARCHAR
+  hours_monday_close VARCHAR
+  social_tiktok VARCHAR
+}
+
+table odysseys {
+  is_active BOOLEAN not_null
+  vessel_id UUID primary_key
+  id UUID primary_key
+  description TEXT
+  sales_lead_time_hours INT not_null
+  name VARCHAR not_null
+  booking_window_rollout BOOLEAN not_null
+  updated_at TIMESTAMPTZ not_null
+  booking_window_days INT not_null
+  created_at TIMESTAMPTZ not_null
+}
+
+table seo_kairos {
+  meta_description TEXT
+  created_by UUID
+  created_at TIMESTAMPTZ not_null
+  slug TEXT not_null
+  updated_at TIMESTAMPTZ not_null
+  title TEXT not_null
+  id UUID primary_key
+  updated_by UUID
+  destination TEXT not_null
+  tips JSONB
+  is_published BOOLEAN not_null
+  quick_stats JSONB
+  related_harbors JSONB
+  content_paragraphs JSONB
+}
+
+table operator_facilities {
+  updated_at TIMESTAMPTZ not_null
+  name VARCHAR not_null
+  id UUID primary_key
+  description TEXT
+  icon VARCHAR
+  operator_id UUID primary_key
+  updated_by UUID not_null
+  created_by UUID not_null
+  created_at TIMESTAMPTZ not_null
+  deleted_at TIMESTAMPTZ
+}
+
+table oauth_accounts {
+  provider_user_id VARCHAR primary_key
+  id UUID primary_key
+  provider VARCHAR primary_key
+  created_at TIMESTAMPTZ not_null
+  user_id UUID primary_key
+  access_token TEXT
+  metadata JSONB
+  refresh_token TEXT
+  token_expires_at TIMESTAMPTZ
+  updated_at TIMESTAMPTZ not_null
+}
+
+table fishing_drasimos {
+  price_label TEXT
+  destinations JSONB
+  price_amount INT not_null
+  inclusions JSONB
+  duration_label TEXT not_null
+  what_to_bring JSONB
+  nights INT
+  deposit_percent INT
+  images JSONB
+  fishing_style TEXT not_null
+  price_type TEXT not_null
+  created_at TIMESTAMPTZ
+  description TEXT
+  is_published BOOLEAN
+  updated_at TIMESTAMPTZ
+  duration_type TEXT not_null
+  schedule JSONB
+  tagline TEXT
+  departure_time TEXT
+  skaphos_id UUID primary_key
+  departure_location TEXT not_null
+  trip_highlights JSONB
+  category TEXT
+  target_species JSONB
+  is_available BOOLEAN
+  fishing_techniques JSONB
+  duration_hours INT not_null
+  return_time TEXT
+  slug TEXT primary_key
+  price_currency TEXT
+  id UUID primary_key
+  name TEXT not_null
+  exclusions JSONB
+}
+
+table whatsapp_contacts {
+  bsuid VARCHAR
+  custom_name VARCHAR
+  id UUID primary_key
+  meta_profile_name VARCHAR
+  phone_number VARCHAR primary_key
+  country_code VARCHAR
+  notes TEXT
+  is_blocked BOOLEAN
+  updated_at TIMESTAMPTZ
+  created_at TIMESTAMPTZ
+  username VARCHAR
+}
+
+table pricing_plans {
+  priority INT not_null
+  is_active BOOLEAN not_null
+  end_date DATE not_null
+  updated_at TIMESTAMPTZ not_null
+  currency VARCHAR not_null
+  id UUID primary_key
+  name VARCHAR not_null
+  created_at TIMESTAMPTZ not_null
+  start_date DATE not_null
+  segment_id UUID
+  parent_route_id UUID
+  virtual_segment_id UUID
+}
+
+table seo_comparisons {
+  operator2_id UUID
+  operator1_id UUID
+  category TEXT
+  created_by UUID
+  criteria JSONB
+  intro TEXT
+  title TEXT not_null
+  updated_at TIMESTAMPTZ not_null
+  id UUID primary_key
+  updated_by UUID
+  description TEXT
+  created_at TIMESTAMPTZ not_null
+  comparison_type TEXT not_null
+  is_published BOOLEAN not_null
+  slug TEXT not_null
+  rankings JSONB
+}
+
+table vessel_facilities {
+  updated_by UUID not_null
+  created_by UUID not_null
+  created_at TIMESTAMPTZ not_null
+  deleted_at TIMESTAMPTZ
+  updated_at TIMESTAMPTZ not_null
+  name TEXT not_null
+  id UUID primary_key
+  description TEXT
+  icon TEXT
+  vessel_id UUID primary_key
+}
+
+table vessels {
+  id UUID primary_key
+  default_departure_dock_id UUID
+  updated_at TIMESTAMPTZ not_null
+  seat_capacity INT not_null
+  updated_by UUID not_null
+  default_arrival_dock_id UUID
+  name VARCHAR not_null
+  created_by UUID not_null
+  operator_id UUID primary_key
+  facility TEXT not_null
+  is_active BOOLEAN not_null
+  vessel_type TEXT not_null
+  vessel_class TEXT not_null
+  slug VARCHAR primary_key
+  created_at TIMESTAMPTZ not_null
+  active_since DATE not_null
+  deleted_at TIMESTAMPTZ
+}
+
+table fishing_kratisei {
+  id UUID primary_key
+  special_requests TEXT
+  booking_date DATE not_null
+  status TEXT
+  diathesi_id UUID primary_key
+  contact_phone TEXT not_null
+  contact_email TEXT not_null
+  guest_count INT not_null
+  updated_at TIMESTAMPTZ
+  contact_last_name TEXT not_null
+  drasimos_id UUID primary_key
+  contact_first_name TEXT not_null
+  deposit_amount INT not_null
+  currency TEXT
+  total_amount INT not_null
+  contact_nationality TEXT
+  payment_status TEXT
+  created_at TIMESTAMPTZ
+}
+
+table webhook_logs {
+  error_message TEXT
+  payload JSONB not_null
+  headers JSONB
+  provider TEXT not_null
+  reference_id TEXT
+  id UUID primary_key
+  status TEXT not_null
+  created_at TIMESTAMPTZ not_null
+  event_type TEXT
+}
+
+table user_password_resets {
+  consumed_at TIMESTAMPTZ
+  user_id UUID primary_key
+  expires_at TIMESTAMPTZ not_null
+  id UUID primary_key
+  token VARCHAR primary_key
+  created_at TIMESTAMPTZ not_null
+}
+
+table whatsapp_daily_stats {
+  messages_sent INT not_null
+  daily_limit INT not_null
+  date DATE primary_key
+}
+
+table user_email_verifications {
+  token VARCHAR primary_key
+  expires_at TIMESTAMPTZ not_null
+  id UUID primary_key
+  user_id UUID primary_key
+  consumed_at TIMESTAMPTZ
+  created_at TIMESTAMPTZ not_null
+}
+
+table payment_events {
+  processed BOOLEAN not_null
+  created_at TIMESTAMPTZ not_null
+  event_type TEXT not_null
+  id BIGINT primary_key
+  provider_id TEXT
+  payload JSONB not_null
+  payment_session_id UUID primary_key
+}
+
+table redirects {
+  source_path VARCHAR primary_key
+  updated_at TIMESTAMPTZ
+  is_active BOOLEAN not_null
+  id UUID primary_key
+  redirect_type INT not_null
+  updated_by UUID primary_key
+  destination_url TEXT not_null
+  created_at TIMESTAMPTZ
+  created_by UUID primary_key
+  description TEXT
+  hit_count BIGINT not_null
+}
+
+table whatsapp_contact_group_members {
+  contact_name VARCHAR
+  group_id UUID primary_key
+  added_at TIMESTAMPTZ not_null
+  contact_phone VARCHAR primary_key
+}
+
+table articles {
+  excerpt TEXT
+  allow_comments BOOLEAN not_null
+  like_count BIGINT not_null
+  tags JSONB
+  title VARCHAR not_null
+  view_count BIGINT not_null
+  is_featured BOOLEAN not_null
+  status TEXT not_null
+  id UUID primary_key
+  version INT not_null
+  content TEXT not_null
+  created_at TIMESTAMPTZ not_null
+  meta_description TEXT
+  author_id UUID primary_key
+  slug VARCHAR primary_key
+  category VARCHAR
+  published_at TIMESTAMPTZ
+  reading_time_minutes INT not_null
+  deleted_at TIMESTAMPTZ
+  meta_keywords TEXT
+  updated_at TIMESTAMPTZ not_null
+  word_count INT not_null
+  featured_image_url TEXT
+  meta_title VARCHAR
+  featured_image_id VARCHAR
+}
+
+table app_chat_messages {
+  sender_type TEXT not_null
+  message_type VARCHAR not_null
+  agent_id UUID primary_key
+  id UUID primary_key
+  session_id UUID primary_key
+  content TEXT not_null
+  metadata JSONB
+  created_at TIMESTAMPTZ not_null
+  status TEXT not_null
+}
+
+table seo_poros {
+  dest_harbor_id UUID primary_key
+  is_published BOOLEAN not_null
+  origin_destination_id UUID primary_key
+  created_at TIMESTAMPTZ not_null
+  max_price INT
+  content_paragraphs JSONB
+  origin_harbor_id UUID primary_key
+  meta_description TEXT
+  avg_duration TEXT
+  created_by UUID
+  title TEXT not_null
+  tips JSONB
+  departures_per_day INT
+  slug TEXT not_null
+  updated_at TIMESTAMPTZ not_null
+  distance TEXT
+  updated_by UUID
+  faqs JSONB
+  origin TEXT not_null
+  min_price INT
+  destination TEXT not_null
+  operator_count INT
+  dest_destination_id UUID primary_key
+  id UUID primary_key
+}
+
+table holds {
+  expires_at TIMESTAMPTZ not_null
+  id UUID primary_key
+  seats INT not_null
+  is_confirmed BOOLEAN not_null
+  status TEXT not_null
+  connection_id UUID not_null
+  created_at TIMESTAMPTZ not_null
+  updated_at TIMESTAMPTZ not_null
+  idempotency_key TEXT
+}
+
+table pricing_fees {
+  created_at TIMESTAMPTZ not_null
+  per_pax BOOLEAN not_null
+  name VARCHAR not_null
+  id UUID primary_key
+  fee_type VARCHAR not_null
+  amount DOUBLE PRECISION not_null
+  plan_id UUID primary_key
+}
+
+table search_location_stats {
+  id UUID primary_key
+  location_name VARCHAR not_null
+  updated_at TIMESTAMPTZ not_null
+  location_id UUID primary_key
+  location_slug VARCHAR
+  location_type VARCHAR primary_key
+  last_selected_at TIMESTAMPTZ
+  created_at TIMESTAMPTZ not_null
+  selection_count BIGINT not_null
+}
+
+table ai_knowledge_base {
+  updated_at TIMESTAMPTZ
+  is_active BOOLEAN
+  created_at TIMESTAMPTZ
+  topic VARCHAR not_null
+  keywords TEXT
+  answer TEXT not_null
+  id UUID primary_key
+  question TEXT not_null
+}
+
+table harbor_images {
+  harbor_id UUID primary_key
+  deleted_at TIMESTAMPTZ
+  display_order INT not_null
+  created_at TIMESTAMPTZ not_null
+  image_url TEXT not_null
+  id UUID primary_key
+  is_featured BOOLEAN not_null
+  updated_at TIMESTAMPTZ not_null
+  caption TEXT
+  updated_by UUID not_null
+  created_by UUID not_null
+}
+
+table fishing_skaphos {
+  images JSONB
+  destination_id UUID primary_key
+  description TEXT
+  capacity_min INT not_null
+  amenities JSONB
+  base_location TEXT not_null
+  crew INT not_null
+  created_at TIMESTAMPTZ
+  capacity_max INT not_null
+  slug TEXT primary_key
+  features JSONB
+  harbor_id UUID primary_key
+  id UUID primary_key
+  is_active BOOLEAN
+  name TEXT not_null
+  category TEXT
+  equipment JSONB
+  vessel_type TEXT not_null
+  updated_at TIMESTAMPTZ
+  year_built INT
+  alieus_id UUID primary_key
+  length TEXT
+  cabins INT
+}
+
+table whatsapp_flow_config {
+  footer_text VARCHAR not_null
+  is_active BOOLEAN not_null
+  header_text VARCHAR not_null
+  cta_text VARCHAR not_null
+  flow_id VARCHAR not_null
+  updated_at TIMESTAMPTZ not_null
+  created_at TIMESTAMPTZ not_null
+  trigger_type VARCHAR not_null
+  body_text TEXT not_null
+  flow_name VARCHAR not_null
+  id UUID primary_key
+  first_screen VARCHAR not_null
+}
+
+table harbors {
+  created_at TIMESTAMPTZ not_null
+  updated_by UUID not_null
+  facilities JSONB
+  longitude DOUBLE PRECISION
+  seo_description TEXT not_null
+  operating_hours TEXT
+  created_by UUID not_null
+  city TEXT
+  tz_region VARCHAR
+  google_maps_url TEXT
+  country TEXT
+  is_active BOOLEAN not_null
+  contact_email TEXT
+  address TEXT
+  important_notes JSONB
+  updated_at TIMESTAMPTZ not_null
+  description TEXT
+  photo_url TEXT
+  name TEXT not_null
+  port_fee_amount DOUBLE PRECISION
+  map_image_url TEXT
+  position INT not_null
+  seo_article TEXT
+  port_fee_description TEXT
+  timezone TEXT not_null
+  seo_keywords TEXT not_null
+  contact_phone TEXT
+  id UUID primary_key
+  seo_title TEXT not_null
+  slug TEXT primary_key
+  latitude DOUBLE PRECISION
+}
+
+table promotion_uses {
+  original_amount DOUBLE PRECISION not_null
+  discount_applied DOUBLE PRECISION not_null
+  created_at TIMESTAMPTZ not_null
+  customer_id UUID primary_key
+  promotion_id UUID primary_key
+  order_id UUID primary_key
+  id UUID primary_key
+  customer_email VARCHAR
+}
+
+table saved_passengers {
+  created_at TIMESTAMPTZ not_null
+  updated_at TIMESTAMPTZ not_null
+  passenger_type VARCHAR not_null
+  country VARCHAR not_null
+  user_id UUID primary_key
+  id UUID primary_key
+  title VARCHAR not_null
+  full_name VARCHAR not_null
+}
+
+table operator_schedule_table {
+  arrival_time TEXT
+  frequency VARCHAR not_null
+  travel_duration VARCHAR
+  updated_at TIMESTAMPTZ not_null
+  origin VARCHAR primary_key
+  created_at TIMESTAMPTZ not_null
+  destination VARCHAR primary_key
+  id UUID primary_key
+  origin_harbor_id UUID primary_key
+  destination_harbor_id UUID primary_key
+  company_id UUID primary_key
+  departure_time TEXT primary_key
+}
+
+table reservations {
+  status TEXT not_null
+  hold_id UUID
+  id UUID primary_key
+  seats INT not_null
+  connection_id UUID not_null
+  updated_at TIMESTAMPTZ not_null
+  nationality TEXT not_null
+  pax_breakdown JSONB not_null
+  currency TEXT not_null
+  price_paid BIGINT not_null
+  created_at TIMESTAMPTZ not_null
+}
+
+table user_payment_methods {
+  card_last_four TEXT
+  created_at TIMESTAMPTZ
+  user_id UUID primary_key
+  updated_at TIMESTAMPTZ
+  xendit_payment_token_id TEXT primary_key
+  is_default BOOLEAN
+  card_brand TEXT
+  id UUID primary_key
+  is_active BOOLEAN
+  card_expiry_year TEXT
+  card_expiry_month TEXT
+  card_holder_name TEXT
+}
+
+table whatsapp_broadcast_recipients {
+  delivered_at TIMESTAMPTZ
+  read_at TIMESTAMPTZ
+  sent_at TIMESTAMPTZ
+  error_message TEXT
+  contact_phone VARCHAR primary_key
+  status VARCHAR
+  broadcast_id UUID primary_key
+  wa_message_id VARCHAR
+}
+
+table operator_offices {
+  is_main_office BOOLEAN not_null
+  created_by UUID not_null
+  email VARCHAR
+  created_at TIMESTAMPTZ not_null
+  id UUID primary_key
+  address TEXT not_null
+  updated_by UUID not_null
+  name VARCHAR not_null
+  phone VARCHAR
+  operator_id UUID primary_key
+  deleted_at TIMESTAMPTZ
+  updated_at TIMESTAMPTZ not_null
+}
+
+table vessel_class_options {
+  created_at TIMESTAMPTZ not_null
+  updated_at TIMESTAMPTZ not_null
+  value TEXT primary_key
+  is_active BOOLEAN not_null
+  id UUID primary_key
+  position INT not_null
+  label TEXT not_null
+}
+
+table destinations {
+  created_at TIMESTAMPTZ not_null
+  travel_tips JSONB
+  seo_article TEXT
+  popular_activities JSONB
+  local_currency TEXT
+  transportation_info TEXT
+  is_popular BOOLEAN not_null
+  seo_keywords TEXT
+  average_trip_duration TEXT
+  position INT not_null
+  seo_title TEXT
+  budget_level TEXT
+  climate_info TEXT
+  safety_rating INT
+  is_active BOOLEAN not_null
+  created_by UUID not_null
+  description TEXT
+  gallery_images JSONB
+  highlights JSONB
+  languages_spoken JSONB
+  latitude DOUBLE PRECISION
+  deleted_at TIMESTAMPTZ
+  cover_image TEXT
+  longitude DOUBLE PRECISION
+  name TEXT not_null
+  updated_at TIMESTAMPTZ not_null
+  display_name TEXT not_null
+  id UUID primary_key
+  best_time_to_visit TEXT
+  slug TEXT primary_key
+  updated_by UUID not_null
+  seo_description TEXT
+}
+
+table promotions {
+  expires_at TIMESTAMPTZ
+  min_purchase_amount DOUBLE PRECISION
+  name VARCHAR not_null
+  id UUID primary_key
+  description TEXT
+  applicable_routes JSONB
+  code VARCHAR primary_key
+  max_uses_per_customer INT
+  created_at TIMESTAMPTZ not_null
+  max_uses INT
+  created_by UUID primary_key
+  updated_at TIMESTAMPTZ not_null
+  discount_type VARCHAR not_null
+  current_uses INT not_null
+  discount_value DOUBLE PRECISION not_null
+  starts_at TIMESTAMPTZ not_null
+  currency VARCHAR
+  is_active BOOLEAN not_null
+  applicable_operators JSONB
+  max_discount_amount DOUBLE PRECISION
+}
+
+table order_modifications {
+  expires_at TIMESTAMPTZ not_null
+  admin_id UUID primary_key
+  customer_response_at TIMESTAMPTZ
+  status VARCHAR not_null
+  reason TEXT not_null
+  order_id UUID primary_key
+  updated_at TIMESTAMPTZ not_null
+  created_at TIMESTAMPTZ not_null
+  id UUID primary_key
+  target_connection_id UUID not_null
+  approval_token VARCHAR not_null
+  original_connection_id UUID not_null
+}
+
+table odyssey_pricing_tiers {
+  pax_type VARCHAR primary_key
+  id UUID primary_key
+  market VARCHAR primary_key
+  plan_id UUID primary_key
+  base_amount DOUBLE PRECISION not_null
+  created_at TIMESTAMPTZ not_null
+}
+
+table destination_harbors {
+  harbor_id UUID primary_key
+  id UUID primary_key
+  is_primary BOOLEAN not_null
+  position INT not_null
+  destination_id UUID primary_key
+  created_at TIMESTAMPTZ not_null
+}
+
+table odyssey_connections {
+  description TEXT
+  leg_ids TEXT not_null
+  is_enabled BOOLEAN not_null
+  updated_at TIMESTAMPTZ not_null
+  origin_harbor_id UUID primary_key
+  created_at TIMESTAMPTZ not_null
+  destination_harbor_id UUID primary_key
+  id UUID primary_key
+  sales_start_date DATE
+  odyssey_id UUID primary_key
+  name VARCHAR not_null
+}
+
+table whatsapp_contact_groups {
+  name VARCHAR not_null
+  updated_at TIMESTAMPTZ not_null
+  created_at TIMESTAMPTZ not_null
+  id UUID primary_key
+  description TEXT
+}
+
+table order_requests {
+  status TEXT not_null
+  updated_at TIMESTAMPTZ not_null
+  order_id UUID primary_key
+  user_id UUID primary_key
+  created_at TIMESTAMPTZ not_null
+  type TEXT not_null
+  id UUID primary_key
+  processed_at TIMESTAMPTZ
+  new_travel_date DATE
+  reason TEXT not_null
+  admin_notes TEXT
+}
+
+table charters_kratisei {
+  payment_status TEXT
+  created_at TIMESTAMPTZ
+  contact_nationality TEXT
+  currency TEXT
+  total_amount INT not_null
+  deposit_amount INT not_null
+  drasimos_id UUID primary_key
+  updated_at TIMESTAMPTZ
+  contact_last_name TEXT not_null
+  contact_first_name TEXT not_null
+  guest_count INT not_null
+  contact_email TEXT not_null
+  id UUID primary_key
+  booking_date DATE not_null
+  special_requests TEXT
+  status TEXT
+  contact_phone TEXT not_null
+  diathesi_id UUID primary_key
+}
+
+table charters_diathesi {
+  id UUID primary_key
+  start_time TEXT primary_key
+  notes TEXT
+  available_date DATE primary_key
+  drasimos_id UUID primary_key
+  updated_at TIMESTAMPTZ
+  created_at TIMESTAMPTZ
+  end_time TEXT
+  price_override INT
+  max_bookings INT
+  current_bookings INT
+  is_available BOOLEAN
+}
+
+table whatsapp_sessions {
+  welcome_sent_at TIMESTAMPTZ
+  created_at TIMESTAMPTZ not_null
+  phone_number VARCHAR not_null
+  updated_at TIMESTAMPTZ not_null
+  close_reason TEXT
+  admin_takeover_at TIMESTAMPTZ
+  closed_by VARCHAR
+  id UUID primary_key
+  status VARCHAR not_null
+  closed_at TIMESTAMPTZ
+  pending_close_prompted_at TIMESTAMPTZ
+  admin_takeover_by VARCHAR
+  welcome_sent BOOLEAN not_null
+  admin_takeover BOOLEAN
+  pending_close_prompted BOOLEAN not_null
+  last_customer_message_at TIMESTAMPTZ
+  last_bot_message_at TIMESTAMPTZ
+}
+
+table idempotency_keys {
+  request_hash VARCHAR not_null
+  created_at TIMESTAMPTZ not_null
+  response_body TEXT not_null
+  response_status INT not_null
+  key VARCHAR primary_key
+  expires_at TIMESTAMPTZ not_null
+}
+
+table pricing_tiers {
+  created_at TIMESTAMPTZ not_null
+  plan_id UUID primary_key
+  base_amount DOUBLE PRECISION not_null
+  pax_type VARCHAR primary_key
+  id UUID primary_key
+  market VARCHAR primary_key
+}
+
+table charters_alieus {
+  contact_email TEXT
+  address TEXT
+  contact_phone TEXT
+  rating DOUBLE PRECISION
+  updated_at TIMESTAMPTZ
+  name TEXT not_null
+  created_at TIMESTAMPTZ
+  city TEXT
+  description TEXT
+  id UUID primary_key
+  review_count INT
+  is_verified BOOLEAN
+  slug TEXT primary_key
+  is_active BOOLEAN
+  logo_url TEXT
+}
+
+table cloudflare_image_attachments {
+  entity_type TEXT not_null
+  id UUID primary_key
+  entity_id UUID not_null
+  field_name TEXT
+  image_id UUID primary_key
+  created_at TIMESTAMPTZ not_null
+  is_featured BOOLEAN not_null
+  updated_at TIMESTAMPTZ not_null
+}
+
+unique index articles_slug_key on articles (slug)
+unique index cloudflare_images_image_id_key on cloudflare_images (image_id)
+unique index destination_harbors_destination_id_harbor_id_key on destination_harbors (destination_id, harbor_id)
+unique index destinations_slug_key on destinations (slug)
+unique index email_templates_slug_key on email_templates (slug)
+unique index fishing_alieus_pkey1 on fishing_alieus (id)
+unique index fishing_alieus_slug_key on charters_alieus (slug)
+unique index fishing_alieus_slug_key1 on fishing_alieus (slug)
+unique index fishing_diathesi_drasimos_id_available_date_start_time_key on charters_diathesi (drasimos_id, available_date, start_time)
+unique index fishing_diathesi_drasimos_id_available_date_start_time_key1 on fishing_diathesi (drasimos_id, available_date, start_time)
+unique index fishing_diathesi_pkey1 on fishing_diathesi (id)
+unique index fishing_drasimos_pkey1 on fishing_drasimos (id)
+unique index fishing_drasimos_slug_key on charters_drasimos (slug)
+unique index fishing_drasimos_slug_key1 on fishing_drasimos (slug)
+unique index fishing_kratisei_pkey1 on fishing_kratisei (id)
+unique index fishing_skaphos_pkey1 on fishing_skaphos (id)
+unique index fishing_skaphos_slug_key on charters_skaphos (slug)
+unique index fishing_skaphos_slug_key1 on fishing_skaphos (slug)
+unique index harbors_slug_key on harbors (slug)
+unique index oauth_accounts_provider_provider_user_id_key on oauth_accounts (provider, provider_user_id)
+unique index odyssey_connections_odyssey_id_origin_harbor_id_destination_key on odyssey_connections (odyssey_id, origin_harbor_id, destination_harbor_id)
+unique index odyssey_legs_odyssey_seq on odyssey_legs (odyssey_id, sequence_order)
+unique index odyssey_pricing_tiers_plan_id_market_pax_type_key on odyssey_pricing_tiers (plan_id, market, pax_type)
+unique index operators_slug_key on operators (slug)
+unique index orders_booking_number_key on orders (booking_number)
+unique index orders_invoice_number_key on orders (invoice_number)
+unique index payment_sessions_session_id_key on payment_sessions (session_id)
+unique index pricing_tiers_plan_market_pax on pricing_tiers (plan_id, market, pax_type)
+unique index promotion_uses_promotion_id_order_id_key on promotion_uses (promotion_id, order_id)
+unique index promotions_code_key on promotions (code)
+unique index redirects_source_path_key on redirects (source_path)
+unique index refresh_tokens_token_key on refresh_tokens (token)
+unique index search_location_stats_location_type_location_id_key on search_location_stats (location_type, location_id)
+unique index ssl_certificates_domain_key on ssl_certificates (domain)
+unique index unique_company_schedule on operator_schedule_table (company_id, origin, destination, departure_time)
+unique index unique_postmark_event on postmark_events (message_id, event_type, recipient, processed_at)
+unique index uq_leg_inventory_leg_date on odyssey_leg_inventory (leg_id, service_date)
+unique index user_email_verifications_token_key on user_email_verifications (token)
+unique index user_password_resets_token_key on user_password_resets (token)
+unique index users_email_key on users (email)
+unique index vessel_class_options_value_key on vessel_class_options (value)
+unique index vessel_type_options_value_key on vessel_type_options (value)
+unique index vessels_slug_key on vessels (slug)
+unique index whatsapp_contacts_phone_number_key on whatsapp_contacts (phone_number)
+unique index whatsapp_phone_configs_phone_number_id_key on whatsapp_phone_configs (phone_number_id)
+index idx_ai_knowledge_base_keywords on ai_knowledge_base (keywords)
+index idx_articles_author on articles (author_id)
+index idx_articles_category on articles (category)
+index idx_articles_created_at on articles (created_at)
+index idx_articles_deleted_at on articles (deleted_at)
+index idx_articles_featured on articles (is_featured)
+index idx_articles_published_at on articles (published_at)
+index idx_articles_slug on articles (slug)
+index idx_articles_status on articles (status)
+index idx_cf_image_attachments_entity on cloudflare_image_attachments (entity_type, entity_id)
+index idx_cf_image_attachments_featured on cloudflare_image_attachments (is_featured = true)
+index idx_cf_image_attachments_image_id on cloudflare_image_attachments (image_id)
+unique index idx_cf_image_attachments_unique on cloudflare_image_attachments (field_name IS NOT NULL)
+index idx_charters_diathesi_date on charters_diathesi (available_date)
+index idx_charters_diathesi_drasimos on charters_diathesi (drasimos_id)
+index idx_charters_drasimos_category on charters_drasimos (category)
+index idx_charters_drasimos_published on charters_drasimos (is_published)
+index idx_charters_drasimos_skaphos on charters_drasimos (skaphos_id)
+index idx_charters_drasimos_style on charters_drasimos (charter_style)
+index idx_charters_kratisei_date on charters_kratisei (booking_date)
+index idx_charters_kratisei_drasimos on charters_kratisei (drasimos_id)
+index idx_charters_kratisei_status on charters_kratisei (status)
+index idx_charters_skaphos_alieus on charters_skaphos (alieus_id)
+index idx_charters_skaphos_category on charters_skaphos (category)
+index idx_charters_skaphos_destination on charters_skaphos (destination_id IS NOT NULL)
+index idx_charters_skaphos_harbor on charters_skaphos (harbor_id IS NOT NULL)
+index idx_charters_skaphos_type on charters_skaphos (vessel_type)
+index idx_cloudflare_images_deleted_at on cloudflare_images (deleted_at)
+unique index idx_cloudflare_images_image_id on cloudflare_images (image_id)
+index idx_cloudflare_images_uploaded_at on cloudflare_images (uploaded_at DESC)
+index idx_cloudflare_images_uploaded_by on cloudflare_images (uploaded_by)
+index idx_destination_harbors_destination on destination_harbors (destination_id)
+index idx_destination_harbors_harbor on destination_harbors (harbor_id)
+index idx_destination_harbors_primary on destination_harbors (destination_id, is_primary)
+index idx_destinations_active on destinations (is_active)
+index idx_destinations_active_popular on destinations (is_active = true)
+index idx_destinations_created_by on destinations (created_by)
+index idx_destinations_deleted_at on destinations (deleted_at)
+index idx_destinations_popular on destinations (is_popular = true)
+index idx_destinations_position on destinations ("position")
+index idx_destinations_slug on destinations (slug)
+index idx_destinations_updated_by on destinations (updated_by)
+index idx_email_templates_active on email_templates (is_active = true)
+index idx_email_templates_category on email_templates (category)
+index idx_email_templates_slug on email_templates (slug)
+index idx_fishing_diathesi_date on fishing_diathesi (available_date)
+index idx_fishing_diathesi_drasimos on fishing_diathesi (drasimos_id)
+index idx_fishing_drasimos_category on fishing_drasimos (category)
+index idx_fishing_drasimos_published on fishing_drasimos (is_published)
+index idx_fishing_drasimos_skaphos on fishing_drasimos (skaphos_id)
+index idx_fishing_drasimos_style on fishing_drasimos (fishing_style)
+index idx_fishing_kratisei_date on fishing_kratisei (booking_date)
+index idx_fishing_kratisei_drasimos on fishing_kratisei (drasimos_id)
+index idx_fishing_kratisei_status on fishing_kratisei (status)
+index idx_fishing_skaphos_alieus on fishing_skaphos (alieus_id)
+index idx_fishing_skaphos_category on fishing_skaphos (category)
+index idx_fishing_skaphos_destination on fishing_skaphos (destination_id IS NOT NULL)
+index idx_fishing_skaphos_harbor on fishing_skaphos (harbor_id IS NOT NULL)
+index idx_fishing_skaphos_type on fishing_skaphos (vessel_type)
+unique index idx_flow_config_active_trigger on whatsapp_flow_config (is_active = true)
+index idx_flow_config_trigger_type on whatsapp_flow_config (trigger_type)
+index idx_harbor_images_deleted_at on harbor_images (deleted_at)
+index idx_harbor_images_display_order on harbor_images (harbor_id, display_order)
+index idx_harbor_images_featured on harbor_images (is_featured = true)
+index idx_harbor_images_harbor_id on harbor_images (harbor_id)
+unique index idx_harbor_images_one_featured on harbor_images (deleted_at IS NULL))
+index idx_harbors_active on harbors (is_active)
+index idx_harbors_created_by on harbors (created_by)
+index idx_harbors_facilities on harbors (facilities)
+index idx_harbors_location on harbors (longitude IS NOT NULL))
+index idx_harbors_position on harbors ("position")
+index idx_harbors_slug on harbors (slug)
+index idx_harbors_updated_by on harbors (updated_by)
+index idx_holds_expires_at on holds (expires_at)
+index idx_holds_idempotency_key on holds (idempotency_key)
+index idx_holds_status on holds (status)
+index idx_idempotency_expires on idempotency_keys (expires_at)
+index idx_leg_inventory_available on odyssey_leg_inventory (capacity - reserved) > 0)
+index idx_leg_inventory_date on odyssey_leg_inventory (service_date)
+index idx_leg_inventory_lookup on odyssey_leg_inventory (leg_id, service_date)
+index idx_leg_inventory_odyssey on odyssey_leg_inventory (odyssey_id)
+index idx_oauth_accounts_provider on oauth_accounts (provider)
+index idx_oauth_accounts_user_id on oauth_accounts (user_id)
+index idx_odyssey_connections_enabled on odyssey_connections (is_enabled = true)
+index idx_odyssey_connections_odyssey on odyssey_connections (odyssey_id)
+index idx_odyssey_connections_origin_dest on odyssey_connections (origin_harbor_id, destination_harbor_id)
+index idx_odyssey_legs_harbors on odyssey_legs (from_harbor_id, to_harbor_id)
+index idx_odyssey_legs_odyssey on odyssey_legs (odyssey_id)
+index idx_odyssey_pricing_fees_plan on odyssey_pricing_fees (plan_id)
+index idx_odyssey_pricing_plans_active on odyssey_pricing_plans (is_active = true)
+index idx_odyssey_pricing_plans_connection on odyssey_pricing_plans (connection_id IS NOT NULL)
+index idx_odyssey_pricing_plans_dates on odyssey_pricing_plans (start_date, end_date)
+index idx_odyssey_pricing_plans_odyssey on odyssey_pricing_plans (odyssey_id)
+index idx_odyssey_pricing_tiers_plan on odyssey_pricing_tiers (plan_id)
+index idx_odysseys_active on odysseys (is_active = true)
+index idx_odysseys_booking_config on odysseys (booking_window_days, sales_lead_time_hours)
+index idx_odysseys_vessel on odysseys (vessel_id)
+index idx_operator_boarding_points_deleted_at on operator_boarding_points (deleted_at IS NULL)
+index idx_operator_boarding_points_location on operator_boarding_points (latitude, longitude)
+index idx_operator_boarding_points_primary on operator_boarding_points (is_primary = true)
+index idx_operator_facilities_deleted_at on operator_facilities (deleted_at IS NULL)
+index idx_operator_facilities_operator_id on operator_facilities (operator_id)
+index idx_operator_offices_is_main on operator_offices (is_main_office = true)
+index idx_operator_offices_operator_id on operator_offices (operator_id)
+index idx_operator_schedule_company on operator_schedule_table (company_id)
+index idx_operator_schedule_destination_harbor on operator_schedule_table (destination_harbor_id)
+index idx_operator_schedule_origin_harbor on operator_schedule_table (origin_harbor_id)
+index idx_operators_arrival_dock_id on operators (default_arrival_dock_id)
+index idx_operators_brand_name on operators (deleted_at IS NULL)
+index idx_operators_created_at on operators (created_at)
+index idx_operators_created_by on operators (created_by)
+index idx_operators_deleted_at on operators (deleted_at)
+index idx_operators_departure_dock_id on operators (default_departure_dock_id)
+index idx_operators_is_active on operators (is_active)
+index idx_operators_operator_type on operators (operator_type)
+index idx_operators_parent_id on operators (parent_operator_id)
+index idx_operators_slug on operators (slug)
+index idx_operators_updated_at on operators (updated_at)
+index idx_operators_updated_by on operators (updated_by)
+index idx_order_modifications_expires on order_modifications (status)::text = 'pending'::text)
+index idx_order_modifications_order on order_modifications (order_id)
+index idx_order_modifications_status on order_modifications (status)::text = 'pending'::text)
+unique index idx_order_modifications_token on order_modifications (approval_token)
+index idx_order_requests_order_id on order_requests (order_id)
+index idx_order_requests_status on order_requests (status)
+index idx_order_requests_user_id on order_requests (user_id)
+index idx_orders_created_at on orders (created_at DESC)
+index idx_orders_hold_id on orders (hold_id IS NOT NULL)
+index idx_orders_status on orders (status)
+index idx_orders_user_id on orders (user_id IS NOT NULL)
+index idx_orders_voyage_id on orders (voyage_id IS NOT NULL)
+index idx_password_resets_expires_at on user_password_resets (expires_at)
+index idx_password_resets_token on user_password_resets (token)
+index idx_password_resets_user_id on user_password_resets (user_id)
+index idx_payment_events_created_at on payment_events (created_at DESC)
+index idx_payment_events_event_type on payment_events (event_type)
+index idx_payment_events_payment_session_id on payment_events (payment_session_id)
+index idx_payment_events_session_id on payment_events (payment_session_id)
+unique index idx_payment_sessions_active_per_order on payment_sessions (ARRAY['Pending'::text, 'AwaitingPayment'::text, 'Authorized'::text]))
+index idx_payment_sessions_expires_at on payment_sessions (expires_at)
+index idx_payment_sessions_order_id on payment_sessions (order_id)
+index idx_payment_sessions_payment_request_id on payment_sessions (payment_request_id IS NOT NULL)
+index idx_payment_sessions_session_id on payment_sessions (session_id)
+index idx_payment_sessions_status on payment_sessions (status)
+index idx_payment_sessions_xendit_session_id on payment_sessions (xendit_session_id IS NOT NULL)
+index idx_popular_tickets_active on popular_tickets (is_active)
+index idx_popular_tickets_active_position on popular_tickets (is_active = true)
+index idx_popular_tickets_operator on popular_tickets (operator_id IS NOT NULL)
+index idx_popular_tickets_position on popular_tickets ("position")
+index idx_postmark_events_created_at on postmark_events (created_at)
+index idx_postmark_events_email on postmark_events (email)
+index idx_postmark_events_event_type on postmark_events (event_type)
+index idx_postmark_events_failed on postmark_events (processing_status)::text = 'failed'::text)
+index idx_postmark_events_message_id on postmark_events (message_id)
+index idx_postmark_events_message_recipient on postmark_events (message_id, recipient)
+index idx_postmark_events_processed_at on postmark_events (processed_at)
+index idx_postmark_events_recipient on postmark_events (recipient)
+index idx_postmark_events_server_id on postmark_events (server_id)
+index idx_postmark_events_status on postmark_events (processing_status)
+index idx_postmark_events_tag on postmark_events (tag)
+index idx_postmark_events_type_recipient_time on postmark_events (event_type, recipient, processed_at DESC)
+index idx_pricing_fees_plan on pricing_fees (plan_id)
+index idx_pricing_plans_dates on pricing_plans (start_date, end_date)
+index idx_pricing_plans_parent_route on pricing_plans (parent_route_id IS NOT NULL)
+index idx_pricing_plans_segment on pricing_plans (segment_id IS NOT NULL)
+index idx_pricing_tiers_plan on pricing_tiers (plan_id)
+index idx_promotion_uses_customer_email on promotion_uses (customer_email)
+index idx_promotion_uses_order_id on promotion_uses (order_id)
+index idx_promotion_uses_promotion_id on promotion_uses (promotion_id)
+index idx_promotions_code on promotions (code)
+index idx_promotions_dates on promotions (starts_at, expires_at)
+index idx_promotions_is_active on promotions (is_active)
+index idx_redirects_created_at on redirects (created_at DESC)
+index idx_redirects_is_active on redirects (is_active)
+index idx_redirects_source_path on redirects (source_path)
+index idx_refresh_tokens_created_at on refresh_tokens (created_at)
+index idx_refresh_tokens_expires_at on refresh_tokens (expires_at)
+index idx_refresh_tokens_token on refresh_tokens (token)
+index idx_refresh_tokens_user_id on refresh_tokens (user_id)
+index idx_registration_otp_codes_email on registration_otp_codes (email)
+index idx_registration_otp_codes_email_code on registration_otp_codes (consumed_at IS NULL)
+index idx_registration_otp_codes_expires_at on registration_otp_codes (expires_at)
+index idx_reservations_created_at on reservations (created_at DESC)
+index idx_reservations_status on reservations (status)
+index idx_search_location_stats_location on search_location_stats (location_type, location_id)
+index idx_search_location_stats_popularity on search_location_stats (location_type, selection_count DESC)
+index idx_seo_comparisons_published on seo_comparisons (is_published)
+unique index idx_seo_comparisons_slug on seo_comparisons (slug)
+index idx_seo_comparisons_type on seo_comparisons (comparison_type)
+index idx_seo_kairos_destination on seo_kairos (destination)
+index idx_seo_kairos_published on seo_kairos (is_published)
+unique index idx_seo_kairos_slug on seo_kairos (slug)
+index idx_seo_poros_dest_dest_id on seo_poros (dest_destination_id)
+index idx_seo_poros_dest_harbor_id on seo_poros (dest_harbor_id)
+index idx_seo_poros_origin_dest_id on seo_poros (origin_destination_id)
+index idx_seo_poros_origin_destination on seo_poros (origin, destination)
+index idx_seo_poros_origin_harbor_id on seo_poros (origin_harbor_id)
+index idx_seo_poros_published on seo_poros (is_published)
+unique index idx_seo_poros_slug on seo_poros (slug)
+index idx_service_groups_active on service_groups (is_active = true)
+index idx_service_groups_category on service_groups (category)
+index idx_service_groups_class on service_groups (class)
+index idx_service_groups_sort_order on service_groups (sort_order)
+index idx_ssl_certificates_domain_active on ssl_certificates (is_active = true)
+index idx_ssl_certificates_expires_at on ssl_certificates (is_active = true)
+index idx_user_email_verifications_expires_at on user_email_verifications (expires_at)
+index idx_user_email_verifications_user_id on user_email_verifications (user_id)
+index idx_users_active on users (is_active)
+index idx_users_created_at on users (created_at)
+index idx_users_deleted_at on users (deleted_at IS NULL)
+index idx_users_email on users (email)
+index idx_users_last_login on users (last_login)
+index idx_users_password_changed_at on users (password_changed_at)
+index idx_users_phone_numbers on users (phone_numbers)
+index idx_users_role on users (role)
+index idx_users_two_factor_enabled on users (two_factor_enabled)
+index idx_vessel_facilities_deleted_at on vessel_facilities (deleted_at)
+index idx_vessel_facilities_vessel_id on vessel_facilities (vessel_id)
+index idx_vessel_images_deleted_at on vessel_images (deleted_at)
+index idx_vessel_images_display_order on vessel_images (vessel_id, display_order)
+index idx_vessel_images_vessel_id on vessel_images (vessel_id)
+index idx_vessels_active_since on vessels (active_since)
+index idx_vessels_arrival_dock_id on vessels (default_arrival_dock_id)
+index idx_vessels_created_at on vessels (created_at)
+index idx_vessels_created_by on vessels (created_by)
+index idx_vessels_deleted_at on vessels (deleted_at)
+index idx_vessels_departure_dock_id on vessels (default_departure_dock_id)
+index idx_vessels_is_active on vessels (is_active)
+index idx_vessels_operator_id on vessels (operator_id)
+index idx_vessels_slug on vessels (slug)
+index idx_vessels_updated_at on vessels (updated_at)
+index idx_vessels_updated_by on vessels (updated_by)
+index idx_vessels_vessel_class on vessels (vessel_class)
+index idx_vessels_vessel_type on vessels (vessel_type)
+index idx_webhook_logs_provider_created_at on webhook_logs (provider, created_at DESC)
+index idx_webhook_logs_status_created_at on webhook_logs (status, created_at DESC)
+index idx_whatsapp_broadcast_recipients_status on whatsapp_broadcast_recipients (broadcast_id, status)
+index idx_whatsapp_broadcasts_created on whatsapp_broadcasts (created_at DESC)
+index idx_whatsapp_broadcasts_status on whatsapp_broadcasts (status)
+index idx_whatsapp_contact_groups_name on whatsapp_contact_groups (name)
+index idx_whatsapp_contacts_phone on whatsapp_contacts (phone_number)
+index idx_whatsapp_messages_created on whatsapp_messages (created_at DESC)
+index idx_whatsapp_messages_order on whatsapp_messages (order_id IS NOT NULL)
+index idx_whatsapp_messages_our_phone on whatsapp_messages (our_phone_number_id IS NOT NULL)
+index idx_whatsapp_messages_phone on whatsapp_messages (phone_number)
+index idx_whatsapp_messages_read_status on whatsapp_messages (read_at IS NULL))
+index idx_whatsapp_messages_session on whatsapp_messages (session_id IS NOT NULL)
+index idx_whatsapp_messages_wa_id on whatsapp_messages (wa_message_id IS NOT NULL)
+index idx_whatsapp_phone_configs_phone_number_id on whatsapp_phone_configs (phone_number_id)
+index idx_whatsapp_sessions_phone_active on whatsapp_sessions (status)::text = 'active'::text)
+index idx_whatsapp_sessions_phone_history on whatsapp_sessions (phone_number, created_at DESC)
+index idx_whatsapp_sessions_stale on whatsapp_sessions (status)::text = 'active'::text)
+index idx_saved_passengers_user_id on saved_passengers (user_id)
+unique index user_payment_methods_xendit_payment_token_id_key on user_payment_methods (xendit_payment_token_id)
+index idx_user_payment_methods_user_id on user_payment_methods (user_id)
+unique index idx_user_payment_methods_default on user_payment_methods (is_active = true))
+index idx_app_chat_sessions_user_id on app_chat_sessions (user_id)
+index idx_app_chat_sessions_guest_id on app_chat_sessions (guest_id)
+index idx_app_chat_sessions_status on app_chat_sessions (status)
+index idx_app_chat_sessions_created_at on app_chat_sessions (created_at DESC)
+index idx_app_chat_messages_session_id on app_chat_messages (session_id)
+index idx_app_chat_messages_created_at on app_chat_messages (created_at)
+index idx_app_chat_messages_sender_type on app_chat_messages (sender_type)
+index idx_app_chat_sessions_closed on app_chat_sessions (status = 'closed'::text)
+index idx_app_chat_messages_type on app_chat_messages (session_id, message_type)
+index idx_group_inquiries_status on group_inquiries (status)
+index idx_group_inquiries_created_at on group_inquiries (created_at DESC)
+index idx_group_inquiries_event_type on group_inquiries (event_type)
+unique index idx_whatsapp_contacts_bsuid on whatsapp_contacts (bsuid IS NOT NULL)
+index idx_whatsapp_messages_bsuid on whatsapp_messages (bsuid IS NOT NULL)
